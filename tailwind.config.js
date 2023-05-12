@@ -2,7 +2,9 @@
 export default {
   content: [
     "./index.html",
-    // "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/pages/Login.tsx",
+    "./src/pages/Home.tsx",
+    "./src/components/LoginCard.tsx",
   ],
   theme: {
     extend: {},
