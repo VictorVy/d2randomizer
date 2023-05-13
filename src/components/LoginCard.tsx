@@ -6,16 +6,18 @@ const LoginCard = () => {
                         max-w-max max-h-max
                         p-2"
         >
-            <p className="p-2">
+            <p className="m-2">
                 <b>Login</b> to begin randomizing
             </p>
-            <button
-                className="bg-blue-400 text-white
+            <a href="https://www.bungie.net/en/OAuth/Authorize?client_id=44322&response_type=code">
+                <button
+                    className="bg-blue-400 text-white
                             hover:bg-blue-600
-                            p-2"
-            >
-                bruh
-            </button>
+                            px-2 py-1 my-2"
+                >
+                    bruh
+                </button>
+            </a>
         </div>
     );
 };
