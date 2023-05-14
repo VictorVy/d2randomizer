@@ -5,6 +5,7 @@ export default {
     "./src/pages/Login.tsx",
     "./src/pages/Home.tsx",
     "./src/components/LoginCard.tsx",
+    "./src/components/NavBar.tsx",
   ],
   theme: {
     extend: {},

@@ -6,9 +6,10 @@ function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route index element={<Login />} />
+                <Route index element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/home" element={<Home />} />
+                <Route path="*" element={<Home />} />
             </Routes>
         </BrowserRouter>
     );
