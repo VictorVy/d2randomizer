@@ -1,42 +1,97 @@
+import Dexie from "dexie";
 import NavBar from "../components/NavBar";
+import { useLiveQuery } from "dexie-react-hooks";
+
+const db = new Dexie("D2Randomizer");
+db.version(1).stores({
+    weapons: "hash, name, type, tier, slot, ammoType, icon",
+    armour: "hash, name, type, tier, slot, icon",
+});
+
+const weapons = db.table("weapons");
+const armour = db.table("armour");
+
+const addWeapon = async (
+    hash: number,
+    name: string,
+    type: string,
+    tier: string,
+    slot: string,
+    ammoType: string,
+    icon: string
+) => {
+    await weapons.add({
+        hash: hash,
+        name: name,
+        type: type,
+        tier: tier,
+        slot: slot,
+        ammoType: ammoType,
+        icon: icon,
+    });
+};
+
+const addArmour = async (hash: number, name: string, type: string, tier: string, slot: string, icon: string) => {
+    await armour.add({
+        hash: hash,
+        name: name,
+        type: type,
+        tier: tier,
+        slot: slot,
+        icon: icon,
+    });
+};
 
 const Home = () => {
     const logged = localStorage.getItem("access_token") !== null;
-    const fetched = localStorage.getItem("weapons") !== null;
 
-    fetch("https://www.bungie.net/Platform/Destiny2/Manifest/", {
-        method: "GET",
-        headers: {},
-    })
-        .then((response) => response.json())
-        .then((data) => {
-            fetch("https://www.bungie.net/" + data.Response.jsonWorldContentPaths.en)
-                .then((response) => response.json())
-                .then((data) => {
-                    let keys = Object.keys(data.DestinyInventoryItemDefinition);
+    const fetchWeapons = useLiveQuery(() => weapons.toArray(), []);
+    const fetchArmour = useLiveQuery(() => armour.toArray(), []);
 
-                    const weapons = new Map();
-                    const armour = new Map();
+    if (fetchWeapons?.length === 0 && fetchArmour?.length === 0) {
+        console.log("fetching");
 
-                    for (let i = 0; i < keys.length; i++) {
-                        const item = data.DestinyInventoryItemDefinition[keys[i]];
+        fetch("https://www.bungie.net/Platform/Destiny2/Manifest/", {
+            method: "GET",
+            headers: {},
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                fetch("https://www.bungie.net/" + data.Response.jsonWorldContentPaths.en)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        let keys = Object.keys(data.DestinyInventoryItemDefinition);
 
-                        if (item.itemType === 3) {
-                            weapons.set(item.hash, item);
-                        } else if (item.itemType === 2) {
-                            armour.set(item.hash, item);
+                        for (let i = 0; i < keys.length; i++) {
+                            const item = data.DestinyInventoryItemDefinition[keys[i]];
+
+                            if (item.itemType === 3) {
+                                addWeapon(
+                                    item.hash,
+                                    item.displayProperties.name,
+                                    item.itemTypeDisplayName,
+                                    item.inventory.tierTypeName,
+                                    item.equippingBlock.equipmentSlotTypeDisplayName,
+                                    item.equippingBlock.ammoTypeDisplayName,
+                                    item.displayProperties.icon
+                                );
+                            } else if (item.itemType === 2) {
+                                addArmour(
+                                    item.hash,
+                                    item.displayProperties.name,
+                                    item.itemTypeDisplayName,
+                                    item.inventory.tierTypeName,
+                                    item.equippingBlock.equipmentSlotTypeDisplayName,
+                                    item.displayProperties.icon
+                                );
+                            }
                         }
-                    }
-
-                    // localStorage.setItem("weapons", JSON.stringify(Array.from(weapons.entries())));
-                    // localStorage.setItem("armour", JSON.stringify(Array.from(armour.entries())));
-
-                    // console.log(localStorage.getItem("weapons"));
-                })
-                .catch((error) => {
-                    console.log(error);
-                });
-        });
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                    });
+            });
+    }
 
     return (
         <div className="">
