@@ -16,11 +16,13 @@ const addWeapon = async (
     name: string,
     type: string,
     tier: string,
-    slot: string,
-    ammoType: string,
-    icon: string
+    slot: number,
+    ammoType: number,
+    icon: string,
+    class_type: number,
+    damage_type: number
 ) => {
-    await weapons.add({
+    await weapons.put({
         hash: hash,
         name: name,
         type: type,
@@ -28,17 +30,28 @@ const addWeapon = async (
         slot: slot,
         ammoType: ammoType,
         icon: icon,
+        class_type: class_type,
+        damage_type: damage_type,
     });
 };
 
-const addArmour = async (hash: number, name: string, type: string, tier: string, slot: string, icon: string) => {
-    await armour.add({
+const addArmour = async (
+    hash: number,
+    name: string,
+    type: string,
+    tier: string,
+    slot: number,
+    icon: string,
+    class_type: number
+) => {
+    await armour.put({
         hash: hash,
         name: name,
         type: type,
         tier: tier,
         slot: slot,
         icon: icon,
+        class_type: class_type,
     });
 };
 
@@ -71,9 +84,11 @@ const Home = () => {
                                     item.displayProperties.name,
                                     item.itemTypeDisplayName,
                                     item.inventory.tierTypeName,
-                                    item.equippingBlock.equipmentSlotTypeDisplayName,
-                                    item.equippingBlock.ammoTypeDisplayName,
-                                    item.displayProperties.icon
+                                    item.equippingBlock.equipmentSlotTypeHash,
+                                    item.equippingBlock.ammoType,
+                                    item.displayProperties.icon,
+                                    item.classType,
+                                    item.defaultDamageType
                                 );
                             } else if (item.itemType === 2) {
                                 addArmour(
@@ -81,8 +96,9 @@ const Home = () => {
                                     item.displayProperties.name,
                                     item.itemTypeDisplayName,
                                     item.inventory.tierTypeName,
-                                    item.equippingBlock.equipmentSlotTypeDisplayName,
-                                    item.displayProperties.icon
+                                    item.equippingBlock.equipmentSlotTypeHash,
+                                    item.displayProperties.icon,
+                                    item.classType
                                 );
                             }
                         }
