@@ -1,15 +1,20 @@
-import Dexie from "dexie";
+import Dexie, { IndexableType } from "dexie";
 import NavBar from "../components/NavBar";
+import ClassRadio from "../components/ClassRadio";
 import { useLiveQuery } from "dexie-react-hooks";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
     weapons: "hash, name, type, tier, slot, ammoType, icon",
-    armour: "hash, name, type, tier, slot, icon",
+    titan_armour: "hash, name, type, tier, slot, icon",
+    hunter_armour: "hash, name, type, tier, slot, icon",
+    warlock_armour: "hash, name, type, tier, slot, icon",
 });
 
 const weapons = db.table("weapons");
-const armour = db.table("armour");
+const titan_armour = db.table("titan_armour");
+const hunter_armour = db.table("hunter_armour");
+const warlock_armour = db.table("warlock_armour");
 
 const addWeapon = async (
     hash: number,
@@ -44,7 +49,10 @@ const addArmour = async (
     icon: string,
     class_type: number
 ) => {
-    await armour.put({
+    const armour_table: Dexie.Table<any, IndexableType> =
+        class_type === 0 ? titan_armour : class_type === 1 ? hunter_armour : warlock_armour;
+
+    await armour_table.put({
         hash: hash,
         name: name,
         type: type,
@@ -59,9 +67,8 @@ const Home = () => {
     const logged = localStorage.getItem("access_token") !== null;
 
     const fetchWeapons = useLiveQuery(() => weapons.toArray(), []);
-    const fetchArmour = useLiveQuery(() => armour.toArray(), []);
 
-    if (fetchWeapons?.length === 0 && fetchArmour?.length === 0) {
+    if (fetchWeapons?.length === 0) {
         console.log("fetching");
 
         fetch("https://www.bungie.net/Platform/Destiny2/Manifest/", {
@@ -110,8 +117,9 @@ const Home = () => {
     }
 
     return (
-        <div className="">
+        <div className="h-screen w-screen bg-gray-700">
             <NavBar />
+            <ClassRadio />
         </div>
     );
 };
