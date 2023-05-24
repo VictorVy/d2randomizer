@@ -1,8 +1,8 @@
 const Login = () => {
     if (window.location.href.includes("code=")) {
-        const clientId = "44322";
-        const clientSecret = "QxA5VQAHIX-LgRVyamAD1Ld1tLYHc5sVriw-CB06Ejg";
-        const apiKey = "bfc8c907315847f280060e3c86073dfa";
+        const clientId = import.meta.env.VITE_CLIENT_ID;
+        const clientSecret = import.meta.env.VITE_CLIENT_SECRET;
+        const apiKey = import.meta.env.VITE_API_KEY;
 
         const authCode = window.location.href.split("code=")[1].split("&")[0];
 
@@ -52,13 +52,15 @@ const Login = () => {
                                 "bungie_display_name_code",
                                 formatCode(result.Response.cachedBungieGlobalDisplayNameCode.toString())
                             );
-                            localStorage.setItem("pfp_path", "www.bungie.net" + result.Response.profilePicturePath);
+                            localStorage.setItem(
+                                "pfp_path",
+                                "https://www.bungie.net" + result.Response.profilePicturePath
+                            );
 
                             fetch(
                                 `https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/-1/${localStorage.getItem(
                                     "bungie_display_name"
                                 )}%23${localStorage.getItem("bungie_display_name_code")}/`,
-                                // `https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/-1/Dep%230681/`,
                                 {
                                     method: "GET",
                                     headers: {

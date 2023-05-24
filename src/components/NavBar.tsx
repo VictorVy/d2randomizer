@@ -1,5 +1,6 @@
 const NavBar = () => {
     const logged = localStorage.getItem("access_token") !== null;
+    const pfpPath = "" + localStorage.getItem("pfp_path");
 
     return (
         <div className="grid grid-cols-2 bg-gray-800 px-4 py-2 text-white">
@@ -9,14 +10,31 @@ const NavBar = () => {
                 </a>
             </div>
             <div className="m-1 flex justify-self-end">
-                <h2 className="mx-3 my-1">
+                <h2 className="my-1">
                     {logged
                         ? localStorage.getItem("bungie_display_name") +
                           "#" +
                           localStorage.getItem("bungie_display_name_code")
                         : "Guest"}
                 </h2>
-                <img src="www.bungie.net/img/profile/avatars/ccavatar2021113.jpg" />
+                {logged ? (
+                    <img className="mx-3 h-8 w-8" src={pfpPath} />
+                ) : (
+                    <svg
+                        viewBox="0 0 24 24"
+                        width="24"
+                        height="24"
+                        stroke="white"
+                        stroke-width="2"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        className="mx-2 my-1"
+                    >
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                )}
                 <button
                     className="w-20 bg-gray-700 px-2 py-1 hover:bg-gray-600"
                     onClick={
@@ -26,8 +44,9 @@ const NavBar = () => {
                                   window.location.href = "/";
                               }
                             : () =>
-                                  (window.location.href =
-                                      "https://www.bungie.net/en/OAuth/Authorize?client_id=44322&response_type=code")
+                                  (window.location.href = `https://www.bungie.net/en/OAuth/Authorize?client_id=${
+                                      import.meta.env.VITE_CLIENT_ID
+                                  }&response_type=code`)
                     }
                 >
                     {logged ? "Logout" : "Login"}
