@@ -7,6 +7,8 @@ export default {
     "./src/components/LoginCard.tsx",
     "./src/components/NavBar.tsx",
     "./src/components/ClassRadio.tsx",
+    "./src/components/Randomizer.tsx",
+    "./src/components/LoadoutSlot.tsx",
   ],
   theme: {
     extend: {},

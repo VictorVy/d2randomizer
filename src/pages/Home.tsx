@@ -1,6 +1,6 @@
 import Dexie, { IndexableType } from "dexie";
 import NavBar from "../components/NavBar";
-import ClassRadio from "../components/ClassRadio";
+import Randomizer from "../components/Randomizer";
 import { useLiveQuery } from "dexie-react-hooks";
 
 const db = new Dexie("D2Randomizer");
@@ -73,11 +73,10 @@ const Home = () => {
 
         fetch("https://www.bungie.net/Platform/Destiny2/Manifest/", {
             method: "GET",
-            headers: {},
         })
             .then((response) => response.json())
             .then((data) => {
-                fetch("https://www.bungie.net/" + data.Response.jsonWorldContentPaths.en)
+                fetch("https://www.bungie.net/" + data.Response.jsonWorldContentPaths.en, {})
                     .then((response) => response.json())
                     .then((data) => {
                         let keys = Object.keys(data.DestinyInventoryItemDefinition);
@@ -109,9 +108,6 @@ const Home = () => {
                                 );
                             }
                         }
-                    })
-                    .catch((error) => {
-                        console.error("Error:", error);
                     });
             });
     }
@@ -119,9 +115,7 @@ const Home = () => {
     return (
         <div className="h-screen w-screen bg-gray-700">
             <NavBar />
-            <div className="flex justify-center">
-                <ClassRadio />
-            </div>
+            <Randomizer />
         </div>
     );
 };
