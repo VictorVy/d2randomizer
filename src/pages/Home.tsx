@@ -108,6 +108,28 @@ const Home = () => {
                                 );
                             }
                         }
+
+                        keys = Object.keys(data.DestinyEquipmentSlotDefinition);
+
+                        for (let i = 0; i < keys.length; i++) {
+                            const slot = data.DestinyEquipmentSlotDefinition[keys[i]];
+
+                            if (slot.displayProperties.name === "Chest Armor") {
+                                localStorage.setItem("chest_hash", slot.hash);
+                            } else if (slot.displayProperties.name === "Leg Armor") {
+                                localStorage.setItem("boots_hash", slot.hash);
+                            } else if (slot.displayProperties.name === "Helmet") {
+                                localStorage.setItem("helmet_hash", slot.hash);
+                            } else if (slot.displayProperties.name === "Gauntlets") {
+                                localStorage.setItem("gauntlets_hash", slot.hash);
+                            } else if (slot.displayProperties.name === "Kinetic Weapons") {
+                                localStorage.setItem("kinetic_hash", slot.hash);
+                            } else if (slot.displayProperties.name === "Energy Weapons") {
+                                localStorage.setItem("energy_hash", slot.hash);
+                            } else if (slot.displayProperties.name === "Power Weapons") {
+                                localStorage.setItem("power_hash", slot.hash);
+                            }
+                        }
                     });
             });
     }
