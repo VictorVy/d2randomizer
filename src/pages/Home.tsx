@@ -119,7 +119,9 @@ const Home = () => {
     return (
         <div className="h-screen w-screen bg-gray-700">
             <NavBar />
-            <ClassRadio />
+            <div className="flex justify-center">
+                <ClassRadio />
+            </div>
         </div>
     );
 };

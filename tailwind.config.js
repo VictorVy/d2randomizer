@@ -6,6 +6,7 @@ export default {
     "./src/pages/Home.tsx",
     "./src/components/LoginCard.tsx",
     "./src/components/NavBar.tsx",
+    "./src/components/ClassRadio.tsx",
   ],
   theme: {
     extend: {},
