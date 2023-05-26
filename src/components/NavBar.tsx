@@ -25,10 +25,10 @@ const NavBar = () => {
                         width="24"
                         height="24"
                         stroke="white"
-                        stroke-width="2"
+                        strokeWidth="2"
                         fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                         className="mx-2 my-1"
                     >
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -36,7 +36,7 @@ const NavBar = () => {
                     </svg>
                 )}
                 <button
-                    className="w-20 bg-gray-700 px-2 py-1 hover:bg-gray-600"
+                    className="w-20 rounded border-b-2 border-black bg-gray-700 px-2 py-1 font-semibold shadow hover:border-gray-950 hover:bg-gray-600"
                     onClick={
                         logged
                             ? () => {

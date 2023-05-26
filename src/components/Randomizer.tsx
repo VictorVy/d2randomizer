@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ClassRadio from "./ClassRadio";
 import LoadoutSlot from "./LoadoutSlot";
+import Lock from "./Lock";
 import Dexie, { IndexableType } from "dexie";
 
 const db = new Dexie("D2Randomizer");
@@ -35,6 +36,8 @@ const Randomizer = () => {
     const [slotItems, setSlotItems] = useState(tmpSlotItems);
 
     let [selectedClass, setSelectedClass] = useState(1);
+
+    let [classLocked, setClassLocked] = useState(false);
 
     const chooseWeapon = (slotHash: string, rarity: string) =>
         new Promise((resolve) => {
@@ -112,6 +115,7 @@ const Randomizer = () => {
     return (
         <div className="flex flex-col items-center gap-8 p-12">
             <ClassRadio handleChange={setSelectedClass} />
+            <Lock onLock={setClassLocked} />
             <div className="bg-red grid grid-cols-2 gap-x-20 gap-y-8">
                 <LoadoutSlot item={slotItems[0]} /> {/* kinetic weapon */}
                 <LoadoutSlot item={slotItems[3]} /> {/* helmet */}
@@ -123,7 +127,7 @@ const Randomizer = () => {
                 <LoadoutSlot item={slotItems[6]} /> {/* boots */}
             </div>
             <button
-                className="rounded border-b-2 border-black bg-gray-900 px-4 py-2 font-bold text-white shadow-md hover:border-gray-900 hover:bg-gray-800"
+                className="rounded border-b-2 border-black bg-gray-900 px-4 py-2 font-semibold text-white shadow-md hover:border-gray-900 hover:bg-gray-800"
                 onClick={() => randomize().then(() => setSlotItems(tmpSlotItems))}
             >
                 randomize

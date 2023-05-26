@@ -8,7 +8,7 @@ const ClassRadio = ({ handleChange }: ClassRadioProps) => {
     const WARLOCK: number = 2;
 
     return (
-        <div className="m-2 flex max-w-min items-center rounded-md bg-black bg-opacity-30 p-2">
+        <div className="m-2 flex max-w-min items-center rounded-md bg-black bg-opacity-30 p-2 shadow">
             <label title="Titan" className="px-2">
                 <input
                     className="peer absolute h-0 w-0"

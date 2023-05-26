@@ -9,6 +9,7 @@ export default {
     "./src/components/ClassRadio.tsx",
     "./src/components/Randomizer.tsx",
     "./src/components/LoadoutSlot.tsx",
+    "./src/components/Lock.tsx",
   ],
   theme: {
     extend: {},
