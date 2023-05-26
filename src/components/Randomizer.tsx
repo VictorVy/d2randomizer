@@ -20,7 +20,7 @@ const warlock_armour = db.table("warlock_armour");
 const Randomizer = () => {
     const TITAN: number = 0;
     const HUNTER: number = 1;
-    const WARLOCK: number = 2;
+    // const WARLOCK: number = 2;
 
     const SLOT_HASHES: string[] = [
         localStorage.getItem("kinetic_hash")!,
@@ -90,6 +90,9 @@ const Randomizer = () => {
         });
 
     async function randomize() {
+        if (!classLocked) {
+            setSelectedClass(Math.floor(Math.random() * 3));
+        }
         console.log(selectedClass);
 
         const exoticWeaponSlot = Math.floor(Math.random() * 3);
@@ -113,9 +116,11 @@ const Randomizer = () => {
     }
 
     return (
-        <div className="flex flex-col items-center gap-8 p-12">
-            <ClassRadio handleChange={setSelectedClass} />
-            <Lock onLock={setClassLocked} />
+        <div className="relative flex flex-col items-center gap-8 p-12">
+            <ClassRadio selectedClass={selectedClass} handleChange={setSelectedClass} />
+            <div className="absolute top-0">
+                <Lock onLock={setClassLocked} />
+            </div>
             <div className="bg-red grid grid-cols-2 gap-x-20 gap-y-8">
                 <LoadoutSlot item={slotItems[0]} /> {/* kinetic weapon */}
                 <LoadoutSlot item={slotItems[3]} /> {/* helmet */}

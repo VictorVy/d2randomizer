@@ -1,8 +1,9 @@
 interface ClassRadioProps {
+    selectedClass: number;
     handleChange: (n: number) => void;
 }
 
-const ClassRadio = ({ handleChange }: ClassRadioProps) => {
+const ClassRadio = ({ selectedClass, handleChange }: ClassRadioProps) => {
     const TITAN: number = 0;
     const HUNTER: number = 1;
     const WARLOCK: number = 2;
@@ -15,6 +16,7 @@ const ClassRadio = ({ handleChange }: ClassRadioProps) => {
                     type="radio"
                     name="class-radio"
                     onChange={() => handleChange(TITAN)}
+                    checked={selectedClass === TITAN}
                 />
                 <svg
                     className="fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
@@ -32,6 +34,7 @@ const ClassRadio = ({ handleChange }: ClassRadioProps) => {
                     name="class-radio"
                     onChange={() => handleChange(HUNTER)}
                     defaultChecked
+                    checked={selectedClass === HUNTER}
                 />
                 <svg
                     className="fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
@@ -48,6 +51,7 @@ const ClassRadio = ({ handleChange }: ClassRadioProps) => {
                     type="radio"
                     name="class-radio"
                     onChange={() => handleChange(WARLOCK)}
+                    checked={selectedClass === WARLOCK}
                 />
                 <svg
                     className="fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
