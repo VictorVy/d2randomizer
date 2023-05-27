@@ -19,17 +19,17 @@ const titan_armour = db.table("titan_armour");
 const hunter_armour = db.table("hunter_armour");
 const warlock_armour = db.table("warlock_armour");
 
+const TITAN: number = 0;
+const HUNTER: number = 1;
+// const WARLOCK: number = 2;
+
+const SOLAR = 0;
+const VOID = 1;
+const ARC = 2;
+const STASIS = 3;
+const STRAND = 4;
+
 const Randomizer = () => {
-    const TITAN: number = 0;
-    const HUNTER: number = 1;
-    // const WARLOCK: number = 2;
-
-    const SOLAR = 0;
-    const VOID = 1;
-    const ARC = 2;
-    const STASIS = 3;
-    const STRAND = 4;
-
     const SLOT_HASHES: string[] = [
         localStorage.getItem("kinetic_hash")!,
         localStorage.getItem("energy_hash")!,
@@ -49,9 +49,9 @@ const Randomizer = () => {
     let [classLocked, setClassLocked] = useState(false);
     let [subclassLocked, setSubclassLocked] = useState(false);
 
-    const SLOTS_LOCKED = [false, false, false, false, false, false, false];
+    const SLOTS_LOCKED: boolean[] = [false, false, false, false, false, false, false];
 
-    const chooseWeapon = (slotHash: string, rarity: string) =>
+    const chooseWeapon = (selClass: number, slotHash: string, rarity: string) =>
         new Promise((resolve) => {
             weapons
                 .where("slot")
@@ -59,7 +59,7 @@ const Randomizer = () => {
                 .and((weapon) =>
                     rarity.startsWith("!") ? weapon.tier !== rarity.substring(1) : weapon.tier === rarity
                 )
-                .and((weapon) => weapon.class_type === selectedClass || weapon.class_type === 3)
+                .and((weapon) => weapon.class_type === selClass || weapon.class_type === 3)
                 .toArray()
                 .then((exoticWeapons) => {
                     const randomIndex = Math.floor(Math.random() * exoticWeapons.length);
@@ -69,13 +69,11 @@ const Randomizer = () => {
                 });
         });
 
-    const chooseArmour = (slotHash: string, rarity: string) =>
+    const chooseArmour = (selClass: number, slotHash: string, rarity: string) =>
         new Promise((resolve) => {
             let armourTable: Dexie.Table<any, IndexableType>;
 
-            console.log("resolved ", selectedClass);
-
-            switch (selectedClass) {
+            switch (selClass) {
                 case TITAN:
                     armourTable = titan_armour;
                     break;
@@ -103,31 +101,34 @@ const Randomizer = () => {
         });
 
     async function randomize() {
-        if (!classLocked) {
-            const tmp = Math.floor(Math.random() * 3);
-            setSelectedClass(tmp);
-            console.log(selectedClass);
-        }
-        if (!subclassLocked) {
-            setSelectedSubclass(Math.floor(Math.random() * 5));
-        }
+        const randClass = Math.floor(Math.random() * 3);
+        const randSubclass = Math.floor(Math.random() * 5);
 
+        setSelectedClass(classLocked ? selectedClass : randClass);
+        setSelectedSubclass(subclassLocked ? selectedSubclass : randSubclass);
+
+        await randomizeItems(classLocked ? selectedClass : randClass);
+
+        setSlotItems(tmpSlotItems);
+    }
+
+    async function randomizeItems(selClass: number) {
         const exoticWeaponSlot = Math.floor(Math.random() * 3);
         const exoticArmourSlot = Math.floor(Math.random() * 4) + 3;
 
         tmpSlotItems = [undefined, undefined, undefined, undefined, undefined, undefined, undefined];
 
-        tmpSlotItems[exoticWeaponSlot] = await chooseWeapon(SLOT_HASHES[exoticWeaponSlot], "Exotic");
-        tmpSlotItems[exoticArmourSlot] = await chooseArmour(SLOT_HASHES[exoticArmourSlot], "Exotic");
+        tmpSlotItems[exoticWeaponSlot] = await chooseWeapon(selClass, SLOT_HASHES[exoticWeaponSlot], "Exotic");
+        tmpSlotItems[exoticArmourSlot] = await chooseArmour(selClass, SLOT_HASHES[exoticArmourSlot], "Exotic");
 
         for (let i = 0; i < 3; i++) {
             if (i !== exoticWeaponSlot) {
-                tmpSlotItems[i] = await chooseWeapon(SLOT_HASHES[i], "!Exotic");
+                tmpSlotItems[i] = await chooseWeapon(selClass, SLOT_HASHES[i], "!Exotic");
             }
         }
         for (let i = 3; i < 7; i++) {
             if (i !== exoticArmourSlot) {
-                tmpSlotItems[i] = await chooseArmour(SLOT_HASHES[i], "!Exotic");
+                tmpSlotItems[i] = await chooseArmour(selClass, SLOT_HASHES[i], "!Exotic");
             }
         }
     }
@@ -162,7 +163,7 @@ const Randomizer = () => {
             </div>
             <button
                 className="rounded border-b-2 border-black bg-gray-900 px-4 py-2 font-semibold text-white shadow-md hover:border-gray-900 hover:bg-gray-800"
-                onClick={() => randomize().then(() => setSlotItems(tmpSlotItems))}
+                onClick={() => randomize()}
             >
                 Randomize
             </button>
