@@ -1,11 +1,11 @@
 import Tooltip from "./Tooltip";
 
 interface ClassRadioProps {
-    selectedClass: number;
+    selected: number;
     handleChange: (n: number) => void;
 }
 
-const ClassRadio = ({ selectedClass, handleChange }: ClassRadioProps) => {
+const ClassRadio = ({ selected, handleChange }: ClassRadioProps) => {
     const TITAN: number = 0;
     const HUNTER: number = 1;
     const WARLOCK: number = 2;
@@ -18,7 +18,7 @@ const ClassRadio = ({ selectedClass, handleChange }: ClassRadioProps) => {
                     type="radio"
                     name="class-radio"
                     onChange={() => handleChange(TITAN)}
-                    checked={selectedClass === TITAN}
+                    checked={selected === TITAN}
                 />
                 <svg
                     className="cursor-pointer fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
@@ -37,7 +37,7 @@ const ClassRadio = ({ selectedClass, handleChange }: ClassRadioProps) => {
                     name="class-radio"
                     onChange={() => handleChange(HUNTER)}
                     defaultChecked
-                    checked={selectedClass === HUNTER}
+                    checked={selected === HUNTER}
                 />
                 <svg
                     className="cursor-pointer fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
@@ -55,7 +55,7 @@ const ClassRadio = ({ selectedClass, handleChange }: ClassRadioProps) => {
                     type="radio"
                     name="class-radio"
                     onChange={() => handleChange(WARLOCK)}
-                    checked={selectedClass === WARLOCK}
+                    checked={selected === WARLOCK}
                 />
                 <svg
                     className="cursor-pointer fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"

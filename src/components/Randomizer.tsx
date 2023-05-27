@@ -51,15 +51,6 @@ const Randomizer = () => {
 
     const SLOTS_LOCKED = [false, false, false, false, false, false, false];
 
-    // let randomizationFlag: boolean = false;
-
-    // useEffect(() => {
-    //     if (randomizationFlag) {
-    //         randomizeItems();
-    //         randomizationFlag = false;
-    //     }
-    // }, [selectedClass]);
-
     const chooseWeapon = (slotHash: string, rarity: string) =>
         new Promise((resolve) => {
             weapons
@@ -111,18 +102,16 @@ const Randomizer = () => {
                 });
         });
 
-    async function randomizeClass() {
-        // randomizationFlag = true;
-
+    async function randomize() {
         if (!classLocked) {
-            setSelectedClass(Math.floor(Math.random() * 3));
+            const tmp = Math.floor(Math.random() * 3);
+            setSelectedClass(tmp);
+            console.log(selectedClass);
         }
         if (!subclassLocked) {
             setSelectedSubclass(Math.floor(Math.random() * 5));
         }
-    }
 
-    async function randomizeItems() {
         const exoticWeaponSlot = Math.floor(Math.random() * 3);
         const exoticArmourSlot = Math.floor(Math.random() * 4) + 3;
 
@@ -149,7 +138,7 @@ const Randomizer = () => {
                 <div className="absolute -left-10 top-1/2 -translate-y-1/2">
                     <Lock onLock={setClassLocked} />
                 </div>
-                <ClassRadio selectedClass={selectedClass} handleChange={setSelectedClass} />
+                <ClassRadio selected={selectedClass} handleChange={setSelectedClass} />
             </div>
             <div className="relative">
                 <div className="absolute -left-10 top-1/2 -translate-y-1/2">
@@ -173,7 +162,7 @@ const Randomizer = () => {
             </div>
             <button
                 className="rounded border-b-2 border-black bg-gray-900 px-4 py-2 font-semibold text-white shadow-md hover:border-gray-900 hover:bg-gray-800"
-                onClick={() => randomizeClass().then(() => setSlotItems(tmpSlotItems))}
+                onClick={() => randomize().then(() => setSlotItems(tmpSlotItems))}
             >
                 Randomize
             </button>
