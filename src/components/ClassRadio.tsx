@@ -9,7 +9,7 @@ const ClassRadio = ({ selectedClass, handleChange }: ClassRadioProps) => {
     const WARLOCK: number = 2;
 
     return (
-        <div className="m-2 flex max-w-min items-center rounded-md bg-black bg-opacity-30 p-2 shadow">
+        <div className="flex max-w-min items-center rounded-md bg-black bg-opacity-30 p-2 shadow">
             <label title="Titan" className="px-2">
                 <input
                     className="peer absolute h-0 w-0"
@@ -19,7 +19,7 @@ const ClassRadio = ({ selectedClass, handleChange }: ClassRadioProps) => {
                     checked={selectedClass === TITAN}
                 />
                 <svg
-                    className="fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="cursor-pointer fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
                     width="50"
@@ -37,7 +37,7 @@ const ClassRadio = ({ selectedClass, handleChange }: ClassRadioProps) => {
                     checked={selectedClass === HUNTER}
                 />
                 <svg
-                    className="fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="cursor-pointer fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
                     width="48"
@@ -54,7 +54,7 @@ const ClassRadio = ({ selectedClass, handleChange }: ClassRadioProps) => {
                     checked={selectedClass === WARLOCK}
                 />
                 <svg
-                    className="fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="cursor-pointer fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
                     width="50"

@@ -116,10 +116,12 @@ const Randomizer = () => {
     }
 
     return (
-        <div className="relative flex flex-col items-center gap-8 p-12">
-            <ClassRadio selectedClass={selectedClass} handleChange={setSelectedClass} />
-            <div className="absolute top-0">
-                <Lock onLock={setClassLocked} />
+        <div className="flex flex-col items-center gap-8 p-12">
+            <div className="relative">
+                <div className="absolute -left-10 top-1/2 -translate-y-1/2">
+                    <Lock onLock={setClassLocked} />
+                </div>
+                <ClassRadio selectedClass={selectedClass} handleChange={setSelectedClass} />
             </div>
             <div className="bg-red grid grid-cols-2 gap-x-20 gap-y-8">
                 <LoadoutSlot item={slotItems[0]} /> {/* kinetic weapon */}
@@ -135,7 +137,7 @@ const Randomizer = () => {
                 className="rounded border-b-2 border-black bg-gray-900 px-4 py-2 font-semibold text-white shadow-md hover:border-gray-900 hover:bg-gray-800"
                 onClick={() => randomize().then(() => setSlotItems(tmpSlotItems))}
             >
-                randomize
+                Randomize
             </button>
         </div>
     );
