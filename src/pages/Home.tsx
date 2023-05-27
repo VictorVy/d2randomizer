@@ -9,12 +9,14 @@ db.version(1).stores({
     titan_armour: "hash, name, type, tier, slot, icon",
     hunter_armour: "hash, name, type, tier, slot, icon",
     warlock_armour: "hash, name, type, tier, slot, icon",
+    subclasses: "hash, name, icon",
 });
 
 const weapons = db.table("weapons");
 const titan_armour = db.table("titan_armour");
 const hunter_armour = db.table("hunter_armour");
 const warlock_armour = db.table("warlock_armour");
+const subclasses = db.table("subclasses");
 
 const addWeapon = async (
     hash: number,
@@ -63,14 +65,21 @@ const addArmour = async (
     });
 };
 
+const addSubclass = async (hash: number, name: string, element: string, icon: string) => {
+    await subclasses.put({
+        hash: hash,
+        name: name,
+        element: element,
+        icon: icon,
+    });
+};
+
 const Home = () => {
     const logged = localStorage.getItem("access_token") !== null;
 
     const fetchWeapons = useLiveQuery(() => weapons.toArray(), []);
 
     if (fetchWeapons?.length === 0) {
-        console.log("fetching");
-
         fetch("https://www.bungie.net/Platform/Destiny2/Manifest/", {
             method: "GET",
         })
@@ -78,8 +87,7 @@ const Home = () => {
             .then((data) => {
                 // fetch power cap
                 fetch(
-                    "https://www.bungie.net/" +
-                        data.Response.jsonWorldComponentContentPaths.en.DestinyPowerCapDefinition
+                    "https://www.bungie.net" + data.Response.jsonWorldComponentContentPaths.en.DestinyPowerCapDefinition
                 )
                     .then((response) => response.json())
                     .then((data) => {
@@ -97,8 +105,8 @@ const Home = () => {
                         localStorage.setItem("num_hashes", numHashes.toString());
                     })
                     .then(() => {
-                        // fetch weapons/armour and item slot hashes
-                        fetch("https://www.bungie.net/" + data.Response.jsonWorldContentPaths.en)
+                        // fetch weapons/armour, item slot hashes, ad subclasses
+                        fetch("https://www.bungie.net" + data.Response.jsonWorldContentPaths.en)
                             .then((response) => response.json())
                             .then((data) => {
                                 let keys = Object.keys(data.DestinyInventoryItemDefinition);
@@ -144,6 +152,18 @@ const Home = () => {
                                             item.displayProperties.icon,
                                             item.classType
                                         );
+                                    } else if (item.itemType === 16 && item.classType !== 3) {
+                                        addSubclass(
+                                            item.hash,
+                                            item.displayProperties.name,
+                                            item.talentGrid.buildName.substring(
+                                                0,
+                                                item.talentGrid.buildName.indexOf("_")
+                                            ),
+                                            item.displayProperties.icon
+                                        );
+
+                                        localStorage.setItem(item.talentGrid.buildName, item.hash);
                                     }
                                 }
 

@@ -10,6 +10,7 @@ export default {
     "./src/components/Randomizer.tsx",
     "./src/components/LoadoutSlot.tsx",
     "./src/components/Lock.tsx",
+    "./src/components/SubclassRadio.tsx",
   ],
   theme: {
     extend: {},
