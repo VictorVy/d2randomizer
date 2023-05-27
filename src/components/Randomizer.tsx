@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ClassRadio from "./ClassRadio";
 import LoadoutSlot from "./LoadoutSlot";
 import Lock from "./Lock";
+import SubclassRadio from "./SubclassRadio";
 import Dexie, { IndexableType } from "dexie";
 
 const db = new Dexie("D2Randomizer");
@@ -10,6 +11,7 @@ db.version(1).stores({
     titan_armour: "hash, name, type, tier, slot, icon",
     hunter_armour: "hash, name, type, tier, slot, icon",
     warlock_armour: "hash, name, type, tier, slot, icon",
+    subclasses: "hash, name, element, icon",
 });
 
 const weapons = db.table("weapons");
@@ -21,6 +23,12 @@ const Randomizer = () => {
     const TITAN: number = 0;
     const HUNTER: number = 1;
     // const WARLOCK: number = 2;
+
+    const SOLAR = 0;
+    const VOID = 1;
+    const ARC = 2;
+    const STASIS = 3;
+    const STRAND = 4;
 
     const SLOT_HASHES: string[] = [
         localStorage.getItem("kinetic_hash")!,
@@ -36,8 +44,21 @@ const Randomizer = () => {
     const [slotItems, setSlotItems] = useState(tmpSlotItems);
 
     let [selectedClass, setSelectedClass] = useState(1);
+    let [selectedSubclass, setSelectedSubclass] = useState(0);
 
     let [classLocked, setClassLocked] = useState(false);
+    let [subclassLocked, setSubclassLocked] = useState(false);
+
+    const SLOTS_LOCKED = [false, false, false, false, false, false, false];
+
+    // let randomizationFlag: boolean = false;
+
+    // useEffect(() => {
+    //     if (randomizationFlag) {
+    //         randomizeItems();
+    //         randomizationFlag = false;
+    //     }
+    // }, [selectedClass]);
 
     const chooseWeapon = (slotHash: string, rarity: string) =>
         new Promise((resolve) => {
@@ -61,6 +82,8 @@ const Randomizer = () => {
         new Promise((resolve) => {
             let armourTable: Dexie.Table<any, IndexableType>;
 
+            console.log("resolved ", selectedClass);
+
             switch (selectedClass) {
                 case TITAN:
                     armourTable = titan_armour;
@@ -79,7 +102,6 @@ const Randomizer = () => {
                 .and((armour) =>
                     rarity.startsWith("!") ? armour.tier !== rarity.substring(1) : armour.tier === rarity
                 )
-                .and((armour) => armour.class_type === selectedClass || armour.class_type === 3)
                 .toArray()
                 .then((exoticArmour) => {
                     const randomIndex = Math.floor(Math.random() * exoticArmour.length);
@@ -89,12 +111,18 @@ const Randomizer = () => {
                 });
         });
 
-    async function randomize() {
+    async function randomizeClass() {
+        // randomizationFlag = true;
+
         if (!classLocked) {
             setSelectedClass(Math.floor(Math.random() * 3));
         }
-        console.log(selectedClass);
+        if (!subclassLocked) {
+            setSelectedSubclass(Math.floor(Math.random() * 5));
+        }
+    }
 
+    async function randomizeItems() {
         const exoticWeaponSlot = Math.floor(Math.random() * 3);
         const exoticArmourSlot = Math.floor(Math.random() * 4) + 3;
 
@@ -123,7 +151,17 @@ const Randomizer = () => {
                 </div>
                 <ClassRadio selectedClass={selectedClass} handleChange={setSelectedClass} />
             </div>
-            <div className="bg-red grid grid-cols-2 gap-x-20 gap-y-8">
+            <div className="relative">
+                <div className="absolute -left-10 top-1/2 -translate-y-1/2">
+                    <Lock onLock={setSubclassLocked} />
+                </div>
+                <SubclassRadio
+                    selectedClass={selectedClass}
+                    selectedElement={selectedSubclass}
+                    handleChange={setSelectedSubclass}
+                />
+            </div>
+            <div className="bg-red my-4 grid grid-cols-2 gap-x-20 gap-y-8">
                 <LoadoutSlot item={slotItems[0]} /> {/* kinetic weapon */}
                 <LoadoutSlot item={slotItems[3]} /> {/* helmet */}
                 <LoadoutSlot item={slotItems[1]} /> {/* energy weapon */}
@@ -135,7 +173,7 @@ const Randomizer = () => {
             </div>
             <button
                 className="rounded border-b-2 border-black bg-gray-900 px-4 py-2 font-semibold text-white shadow-md hover:border-gray-900 hover:bg-gray-800"
-                onClick={() => randomize().then(() => setSlotItems(tmpSlotItems))}
+                onClick={() => randomizeClass().then(() => setSlotItems(tmpSlotItems))}
             >
                 Randomize
             </button>

@@ -11,6 +11,7 @@ export default {
     "./src/components/LoadoutSlot.tsx",
     "./src/components/Lock.tsx",
     "./src/components/SubclassRadio.tsx",
+    "./src/components/Tooltip.tsx",
   ],
   theme: {
     extend: {},
