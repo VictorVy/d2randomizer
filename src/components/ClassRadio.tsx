@@ -3,9 +3,10 @@ import Tooltip from "./Tooltip";
 interface ClassRadioProps {
     selected: number;
     handleChange: (n: number) => void;
+    disable?: boolean;
 }
 
-const ClassRadio = ({ selected, handleChange }: ClassRadioProps) => {
+const ClassRadio = ({ selected, handleChange, disable }: ClassRadioProps) => {
     const TITAN: number = 0;
     const HUNTER: number = 1;
     const WARLOCK: number = 2;
@@ -18,10 +19,15 @@ const ClassRadio = ({ selected, handleChange }: ClassRadioProps) => {
                     type="radio"
                     name="class-radio"
                     onChange={() => handleChange(TITAN)}
+                    disabled={disable}
                     checked={selected === TITAN}
                 />
                 <svg
-                    className="cursor-pointer fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className={
+                        "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100" +
+                        " peer-disabled:" +
+                        (selected === TITAN ? "opacity-90" : "opacity-50")
+                    }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
                     width="50"
@@ -37,10 +43,15 @@ const ClassRadio = ({ selected, handleChange }: ClassRadioProps) => {
                     name="class-radio"
                     onChange={() => handleChange(HUNTER)}
                     defaultChecked
+                    disabled={disable}
                     checked={selected === HUNTER}
                 />
                 <svg
-                    className="cursor-pointer fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className={
+                        "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100" +
+                        " peer-disabled:" +
+                        (selected === HUNTER ? "opacity-90" : "opacity-50")
+                    }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
                     width="48"
@@ -55,10 +66,15 @@ const ClassRadio = ({ selected, handleChange }: ClassRadioProps) => {
                     type="radio"
                     name="class-radio"
                     onChange={() => handleChange(WARLOCK)}
+                    disabled={disable}
                     checked={selected === WARLOCK}
                 />
                 <svg
-                    className="cursor-pointer fill-white opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className={
+                        "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100" +
+                        " peer-disabled:" +
+                        (selected === WARLOCK ? "opacity-90" : "opacity-50")
+                    }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
                     width="50"

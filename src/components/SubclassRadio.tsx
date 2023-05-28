@@ -37,7 +37,7 @@ const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: Subclas
                     checked={selectedElement === SOLAR}
                 />
                 <img
-                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
                     src="https://www.bungie.net/common/destiny2_content/icons/fedcb91b7ab0584c12f0e9fec730702b.png"
                 />
                 <Tooltip>{localStorage.getItem("thermal_" + classInterpreter(selectedClass))}</Tooltip>
@@ -52,7 +52,7 @@ const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: Subclas
                     checked={selectedElement === ARC}
                 />
                 <img
-                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
                     src="https://www.bungie.net/common/destiny2_content/icons/949af7a61d60a8e6071282daafa9e6e9.png"
                 />
                 <Tooltip>{localStorage.getItem("arc_" + classInterpreter(selectedClass))}</Tooltip>
@@ -67,7 +67,7 @@ const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: Subclas
                     checked={selectedElement === VOID}
                 />
                 <img
-                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
                     src="https://www.bungie.net/common/destiny2_content/icons/32b112a9460e6f0e2b9ee15dc53fe1c1.png"
                 />
                 <Tooltip>{localStorage.getItem("void_" + classInterpreter(selectedClass))}</Tooltip>
@@ -82,7 +82,7 @@ const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: Subclas
                     checked={selectedElement === STASIS}
                 />
                 <img
-                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
                     src="https://www.bungie.net/common/destiny2_content/icons/6e441ffa8c8171ce9caf71e51b72fc19.png"
                 />
                 <Tooltip>{localStorage.getItem("stasis_" + classInterpreter(selectedClass))}</Tooltip>
@@ -97,7 +97,7 @@ const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: Subclas
                     checked={selectedElement === STRAND}
                 />
                 <img
-                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
                     src="https://www.bungie.net/common/destiny2_content/icons/41c0024ce809085ac16f4e0777ea0ac4.png"
                 />
                 <Tooltip>{localStorage.getItem("strand_" + classInterpreter(selectedClass))}</Tooltip>

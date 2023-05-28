@@ -40,16 +40,38 @@ const Randomizer = () => {
         localStorage.getItem("boots_hash")!,
     ];
 
+    let [firstRand, setFirstRand] = useState(true);
+
     let tmpSlotItems: any[] = [undefined, undefined, undefined, undefined, undefined, undefined, undefined];
     const [slotItems, setSlotItems] = useState(tmpSlotItems);
 
     let [selectedClass, setSelectedClass] = useState(1);
     let [selectedSubclass, setSelectedSubclass] = useState(0);
 
-    let [classLocked, setClassLocked] = useState(false);
+    let [classLocked, setClassLocked] = useState(true);
     let [subclassLocked, setSubclassLocked] = useState(false);
 
     const SLOTS_LOCKED: boolean[] = [false, false, false, false, false, false, false];
+
+    const [slotsLocked, setSlotsLocked] = useState(SLOTS_LOCKED);
+
+    const setSlotLocked = (slot: number, locked: boolean) => {
+        console.log("Setting slot " + slot + " to " + locked);
+
+        let tmpSlotsLocked = [...slotsLocked];
+        tmpSlotsLocked[slot] = locked;
+        setSlotsLocked(tmpSlotsLocked);
+    };
+
+    // lock class when armour is locked
+    let [disableClassLock, setDisableClassLock] = useState(false);
+
+    useEffect(() => {
+        if (!firstRand && (slotsLocked[3] || slotsLocked[4] || slotsLocked[5] || slotsLocked[6])) {
+            setClassLocked(true);
+            setDisableClassLock(true);
+        }
+    }, [slotsLocked]);
 
     const chooseWeapon = (selClass: number, slotHash: string, rarity: string) =>
         new Promise((resolve) => {
@@ -101,6 +123,10 @@ const Randomizer = () => {
         });
 
     async function randomize() {
+        if (firstRand) {
+            setFirstRand(false);
+        }
+
         const randClass = Math.floor(Math.random() * 3);
         const randSubclass = Math.floor(Math.random() * 5);
 
@@ -116,18 +142,22 @@ const Randomizer = () => {
         const exoticWeaponSlot = Math.floor(Math.random() * 3);
         const exoticArmourSlot = Math.floor(Math.random() * 4) + 3;
 
-        tmpSlotItems = [undefined, undefined, undefined, undefined, undefined, undefined, undefined];
+        tmpSlotItems = [...slotItems];
 
-        tmpSlotItems[exoticWeaponSlot] = await chooseWeapon(selClass, SLOT_HASHES[exoticWeaponSlot], "Exotic");
-        tmpSlotItems[exoticArmourSlot] = await chooseArmour(selClass, SLOT_HASHES[exoticArmourSlot], "Exotic");
+        if (!slotsLocked[exoticWeaponSlot]) {
+            tmpSlotItems[exoticWeaponSlot] = await chooseWeapon(selClass, SLOT_HASHES[exoticWeaponSlot], "Exotic");
+        }
+        if (!slotsLocked[exoticArmourSlot]) {
+            tmpSlotItems[exoticArmourSlot] = await chooseArmour(selClass, SLOT_HASHES[exoticArmourSlot], "Exotic");
+        }
 
         for (let i = 0; i < 3; i++) {
-            if (i !== exoticWeaponSlot) {
+            if (i !== exoticWeaponSlot && !slotsLocked[i]) {
                 tmpSlotItems[i] = await chooseWeapon(selClass, SLOT_HASHES[i], "!Exotic");
             }
         }
         for (let i = 3; i < 7; i++) {
-            if (i !== exoticArmourSlot) {
+            if (i !== exoticArmourSlot && !slotsLocked[i]) {
                 tmpSlotItems[i] = await chooseArmour(selClass, SLOT_HASHES[i], "!Exotic");
             }
         }
@@ -136,13 +166,13 @@ const Randomizer = () => {
     return (
         <div className="flex flex-col items-center gap-8 p-12">
             <div className="relative">
-                <div className="absolute -left-10 top-1/2 -translate-y-1/2">
-                    <Lock onLock={setClassLocked} />
+                <div className="absolute -left-9 top-1/2 -translate-y-1/2">
+                    <Lock onLock={setClassLocked} defaultLocked={true} disable={disableClassLock} />
                 </div>
-                <ClassRadio selected={selectedClass} handleChange={setSelectedClass} />
+                <ClassRadio selected={selectedClass} handleChange={setSelectedClass} disable={disableClassLock} />
             </div>
             <div className="relative">
-                <div className="absolute -left-10 top-1/2 -translate-y-1/2">
+                <div className="absolute -left-9 top-1/2 -translate-y-1/2">
                     <Lock onLock={setSubclassLocked} />
                 </div>
                 <SubclassRadio
@@ -151,18 +181,53 @@ const Randomizer = () => {
                     handleChange={setSelectedSubclass}
                 />
             </div>
-            <div className="bg-red my-4 grid grid-cols-2 gap-x-20 gap-y-8">
-                <LoadoutSlot item={slotItems[0]} /> {/* kinetic weapon */}
-                <LoadoutSlot item={slotItems[3]} /> {/* helmet */}
-                <LoadoutSlot item={slotItems[1]} /> {/* energy weapon */}
-                <LoadoutSlot item={slotItems[4]} /> {/* gauntlets */}
-                <LoadoutSlot item={slotItems[2]} /> {/* power weapon */}
-                <LoadoutSlot item={slotItems[5]} /> {/* chest */}
+            <div className="bg-red my-4 grid grid-cols-2 gap-x-32 gap-y-8">
+                <div className="relative">
+                    <LoadoutSlot item={slotItems[0]} /> {/* kinetic weapon */}
+                    <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
+                        <Lock onLock={(locked: boolean) => setSlotLocked(0, locked)} disable={firstRand} />
+                    </div>
+                </div>
+                <div className="relative">
+                    <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
+                        <Lock onLock={(locked: boolean) => setSlotLocked(3, locked)} disable={firstRand} />
+                    </div>
+                    <LoadoutSlot item={slotItems[3]} /> {/* helmet */}
+                </div>
+                <div className="relative">
+                    <LoadoutSlot item={slotItems[1]} /> {/* energy weapon */}
+                    <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
+                        <Lock onLock={(locked: boolean) => setSlotLocked(1, locked)} disable={firstRand} />
+                    </div>
+                </div>
+                <div className="relative">
+                    <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
+                        <Lock onLock={(locked: boolean) => setSlotLocked(4, locked)} disable={firstRand} />
+                    </div>
+                    <LoadoutSlot item={slotItems[4]} /> {/* gauntlets */}
+                </div>
+                <div className="relative">
+                    <LoadoutSlot item={slotItems[2]} /> {/* power weapon */}
+                    <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
+                        <Lock onLock={(locked: boolean) => setSlotLocked(2, locked)} disable={firstRand} />
+                    </div>
+                </div>
+                <div className="relative">
+                    <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
+                        <Lock onLock={(locked: boolean) => setSlotLocked(5, locked)} disable={firstRand} />
+                    </div>
+                    <LoadoutSlot item={slotItems[5]} /> {/* chest */}
+                </div>
                 <div />
-                <LoadoutSlot item={slotItems[6]} /> {/* boots */}
+                <div className="relative">
+                    <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
+                        <Lock onLock={(locked: boolean) => setSlotLocked(6, locked)} disable={firstRand} />
+                    </div>
+                    <LoadoutSlot item={slotItems[6]} /> {/* boots */}
+                </div>
             </div>
             <button
-                className="rounded border-b-2 border-black bg-gray-900 px-4 py-2 font-semibold text-white shadow-md hover:border-gray-900 hover:bg-gray-800"
+                className="rounded border-b-2 border-black bg-gray-900 px-4 py-2 font-semibold text-white shadow-md duration-75 hover:border-gray-900 hover:bg-gray-800"
                 onClick={() => randomize()}
             >
                 Randomize
