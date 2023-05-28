@@ -52,8 +52,8 @@ const Randomizer = () => {
 
     const SLOTS_LOCKED: boolean[] = [false, false, false, false, false, false, false];
 
-    let lockedWeaponExotic: number = -1;
-    let lockedArmourExotic: number = -1;
+    let [lockedWeaponExoticSlot, setLockedWeaponExoticSlot] = useState(-1);
+    let [lockedArmourExoticSlot, setLockedArmourExoticSlot] = useState(-1);
 
     const [slotsLocked, setSlotsLocked] = useState(SLOTS_LOCKED);
 
@@ -68,30 +68,25 @@ const Randomizer = () => {
 
     useEffect(() => {
         if (!firstRand) {
-            if (slotsLocked[3] || slotsLocked[4] || slotsLocked[5] || slotsLocked[6]) {
-                setClassLocked(true);
-                setDisableClassLock(true);
+            const armourLocked = slotsLocked[3] || slotsLocked[4] || slotsLocked[5] || slotsLocked[6];
 
-                for (let i = 3; i < 7; i++) {
-                    if (slotItems[i].tier === "Exotic") {
-                        lockedArmourExotic = slotsLocked[i] ? i : -1;
-                        break;
-                    }
-                }
-            } else {
-                setDisableClassLock(false);
-            }
+            setClassLocked(armourLocked);
+            setDisableClassLock(armourLocked);
 
             for (let i = 0; i < 3; i++) {
                 if (slotItems[i].tier === "Exotic") {
-                    lockedWeaponExotic = slotsLocked[i] ? i : -1;
+                    setLockedWeaponExoticSlot(slotsLocked[i] ? i : -1);
+                    break;
+                }
+            }
+
+            for (let i = 3; i < 7; i++) {
+                if (slotItems[i].tier === "Exotic") {
+                    setLockedArmourExoticSlot(slotsLocked[i] ? i : -1);
                     break;
                 }
             }
         }
-
-        console.log("locked weapon exotic: " + lockedWeaponExotic);
-        console.log("locked armour exotic: " + lockedArmourExotic);
     }, [slotsLocked]);
 
     const chooseWeapon = (selClass: number, slotHash: string, rarity: string) =>
@@ -160,15 +155,17 @@ const Randomizer = () => {
     }
 
     async function randomizeItems(selClass: number) {
-        const exoticWeaponSlot = Math.floor(Math.random() * 3);
-        const exoticArmourSlot = Math.floor(Math.random() * 4) + 3;
+        console.log(lockedWeaponExoticSlot, lockedArmourExoticSlot);
+
+        const exoticWeaponSlot = lockedWeaponExoticSlot === -1 ? Math.floor(Math.random() * 3) : -1;
+        const exoticArmourSlot = lockedArmourExoticSlot === -1 ? Math.floor(Math.random() * 4) + 3 : -1;
 
         tmpSlotItems = [...slotItems];
 
-        if (!slotsLocked[exoticWeaponSlot]) {
+        if (lockedWeaponExoticSlot === -1 && !slotsLocked[exoticWeaponSlot]) {
             tmpSlotItems[exoticWeaponSlot] = await chooseWeapon(selClass, SLOT_HASHES[exoticWeaponSlot], "Exotic");
         }
-        if (!slotsLocked[exoticArmourSlot]) {
+        if (lockedArmourExoticSlot === -1 && !slotsLocked[exoticArmourSlot]) {
             tmpSlotItems[exoticArmourSlot] = await chooseArmour(selClass, SLOT_HASHES[exoticArmourSlot], "Exotic");
         }
 
