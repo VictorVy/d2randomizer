@@ -1,4 +1,3 @@
-import Dexie from "dexie";
 import Tooltip from "./Tooltip";
 
 interface SubclassRadioProps {

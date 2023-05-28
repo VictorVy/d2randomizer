@@ -11,7 +11,6 @@ db.version(1).stores({
     titan_armour: "hash, name, type, tier, slot, icon",
     hunter_armour: "hash, name, type, tier, slot, icon",
     warlock_armour: "hash, name, type, tier, slot, icon",
-    subclasses: "hash, name, element, icon",
 });
 
 const weapons = db.table("weapons");
@@ -53,11 +52,12 @@ const Randomizer = () => {
 
     const SLOTS_LOCKED: boolean[] = [false, false, false, false, false, false, false];
 
+    let lockedWeaponExotic: number = -1;
+    let lockedArmourExotic: number = -1;
+
     const [slotsLocked, setSlotsLocked] = useState(SLOTS_LOCKED);
 
     const setSlotLocked = (slot: number, locked: boolean) => {
-        console.log("Setting slot " + slot + " to " + locked);
-
         let tmpSlotsLocked = [...slotsLocked];
         tmpSlotsLocked[slot] = locked;
         setSlotsLocked(tmpSlotsLocked);
@@ -71,10 +71,27 @@ const Randomizer = () => {
             if (slotsLocked[3] || slotsLocked[4] || slotsLocked[5] || slotsLocked[6]) {
                 setClassLocked(true);
                 setDisableClassLock(true);
+
+                for (let i = 3; i < 7; i++) {
+                    if (slotItems[i].tier === "Exotic") {
+                        lockedArmourExotic = slotsLocked[i] ? i : -1;
+                        break;
+                    }
+                }
             } else {
                 setDisableClassLock(false);
             }
+
+            for (let i = 0; i < 3; i++) {
+                if (slotItems[i].tier === "Exotic") {
+                    lockedWeaponExotic = slotsLocked[i] ? i : -1;
+                    break;
+                }
+            }
         }
+
+        console.log("locked weapon exotic: " + lockedWeaponExotic);
+        console.log("locked armour exotic: " + lockedArmourExotic);
     }, [slotsLocked]);
 
     const chooseWeapon = (selClass: number, slotHash: string, rarity: string) =>
