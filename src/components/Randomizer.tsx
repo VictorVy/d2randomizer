@@ -155,10 +155,17 @@ const Randomizer = () => {
     }
 
     async function randomizeItems(selClass: number) {
-        console.log(lockedWeaponExoticSlot, lockedArmourExoticSlot);
+        let exoticWeaponSlot = -1;
+        let exoticArmourSlot = -1;
 
-        const exoticWeaponSlot = lockedWeaponExoticSlot === -1 ? Math.floor(Math.random() * 3) : -1;
-        const exoticArmourSlot = lockedArmourExoticSlot === -1 ? Math.floor(Math.random() * 4) + 3 : -1;
+        if (lockedWeaponExoticSlot === -1) {
+            const unlockedSlots = [0, 1, 2].filter((slot) => !slotsLocked[slot]);
+            exoticWeaponSlot = unlockedSlots[Math.floor(Math.random() * unlockedSlots.length)];
+        }
+        if (lockedArmourExoticSlot === -1) {
+            const unlockedSlots = [3, 4, 5, 6].filter((slot) => !slotsLocked[slot]);
+            exoticArmourSlot = unlockedSlots[Math.floor(Math.random() * unlockedSlots.length)];
+        }
 
         tmpSlotItems = [...slotItems];
 
