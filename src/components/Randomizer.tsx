@@ -67,9 +67,13 @@ const Randomizer = () => {
     let [disableClassLock, setDisableClassLock] = useState(false);
 
     useEffect(() => {
-        if (!firstRand && (slotsLocked[3] || slotsLocked[4] || slotsLocked[5] || slotsLocked[6])) {
-            setClassLocked(true);
-            setDisableClassLock(true);
+        if (!firstRand) {
+            if (slotsLocked[3] || slotsLocked[4] || slotsLocked[5] || slotsLocked[6]) {
+                setClassLocked(true);
+                setDisableClassLock(true);
+            } else {
+                setDisableClassLock(false);
+            }
         }
     }, [slotsLocked]);
 
