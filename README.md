@@ -1,6 +1,7 @@
 # d2randomizer
 
-Randomizer app for Destiny 2!
-Built with React + Vite.
+Randomizer app for Destiny 2! </br>
+Built with React + Vite. </br>
+Uses IndexedDB with Dexie.
 
-Class icons from https://github.com/justrealmilk/destiny-icons
+Destiny class icons from https://github.com/justrealmilk/destiny-icons
