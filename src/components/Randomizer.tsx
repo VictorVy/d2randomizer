@@ -7,10 +7,10 @@ import Dexie, { IndexableType } from "dexie";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
-    weapons: "hash, name, type, tier, slot, ammoType, icon",
-    titan_armour: "hash, name, type, tier, slot, icon",
-    hunter_armour: "hash, name, type, tier, slot, icon",
-    warlock_armour: "hash, name, type, tier, slot, icon",
+    weapons: "hash, name, type, tier, slot, ammoType, icon, owned, inInv, equipped",
+    titan_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
+    hunter_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
+    warlock_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
 });
 
 const weapons = db.table("weapons");
@@ -189,7 +189,7 @@ const Randomizer = () => {
     }
 
     return (
-        <div className="flex flex-col items-center gap-8 p-12">
+        <div className="flex flex-col items-center gap-2 p-8">
             <div className="relative">
                 <div className="absolute -left-9 top-1/2 -translate-y-1/2">
                     <Lock onLock={setClassLocked} defaultLocked={true} disable={disableClassLock} />
@@ -206,7 +206,7 @@ const Randomizer = () => {
                     handleChange={setSelectedSubclass}
                 />
             </div>
-            <div className="bg-red my-4 grid grid-cols-2 gap-x-32 gap-y-8">
+            <div className="bg-red my-5 grid grid-cols-2 gap-x-28 gap-y-7">
                 <div className="relative">
                     <LoadoutSlot item={slotItems[0]} /> {/* kinetic weapon */}
                     <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">

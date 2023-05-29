@@ -9,14 +9,14 @@ const LoadoutSlot = ({ item }: LoadoutSlotProps) => {
         <div className="relative rounded border-2 border-neutral-950 border-opacity-30 bg-black bg-opacity-25 shadow">
             {item ? (
                 <>
-                    <img src={"https://bungie.net" + item.icon} width={50} height={50} className="peer rounded" />
+                    <img src={"https://bungie.net" + item.icon} width={44} height={44} className="peer rounded" />
                     <Tooltip>{item.name}</Tooltip>
                 </>
             ) : (
                 <svg
                     viewBox="0 0 24 24"
-                    width="50"
-                    height="50"
+                    width="44"
+                    height="44"
                     stroke="white"
                     strokeWidth="2"
                     fill="none"

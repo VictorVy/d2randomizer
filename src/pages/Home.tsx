@@ -5,10 +5,10 @@ import { useLiveQuery } from "dexie-react-hooks";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
-    weapons: "hash, name, type, tier, slot, ammoType, icon",
-    titan_armour: "hash, name, type, tier, slot, icon",
-    hunter_armour: "hash, name, type, tier, slot, icon",
-    warlock_armour: "hash, name, type, tier, slot, icon",
+    weapons: "hash, name, type, tier, slot, ammoType, icon, owned, inInv, equipped",
+    titan_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
+    hunter_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
+    warlock_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
 });
 
 const weapons = db.table("weapons");
@@ -25,7 +25,10 @@ const addWeapon = async (
     ammoType: number,
     icon: string,
     class_type: number,
-    damage_type: number
+    damage_type: number,
+    owned: boolean,
+    inInv: number,
+    equipped: number
 ) => {
     await weapons.put({
         hash: hash,
@@ -37,6 +40,9 @@ const addWeapon = async (
         icon: icon,
         class_type: class_type,
         damage_type: damage_type,
+        owned: owned,
+        inInv: inInv,
+        equipped: equipped,
     });
 };
 
@@ -47,7 +53,10 @@ const addArmour = async (
     tier: string,
     slot: number,
     icon: string,
-    class_type: number
+    class_type: number,
+    owned: boolean,
+    inInv: number,
+    equipped: number
 ) => {
     const armour_table: Dexie.Table<any, IndexableType> =
         class_type === 0 ? titan_armour : class_type === 1 ? hunter_armour : warlock_armour;
@@ -60,7 +69,28 @@ const addArmour = async (
         slot: slot,
         icon: icon,
         class_type: class_type,
+        owned: owned,
+        inInv: inInv,
+        equipped: equipped,
     });
+};
+
+const onLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("bungie_membership_id");
+    localStorage.removeItem("bungie_display_name");
+    localStorage.removeItem("bungie_display_name_code");
+    localStorage.removeItem("pfp_path");
+
+    localStorage.removeItem("character_0");
+    localStorage.removeItem("character_1");
+    localStorage.removeItem("character_2");
+    localStorage.removeItem("has_character_0");
+    localStorage.removeItem("has_character_1");
+    localStorage.removeItem("has_character_2");
+
+    window.location.href = "/";
 };
 
 const Home = () => {
@@ -126,7 +156,10 @@ const Home = () => {
                                             item.equippingBlock.ammoType,
                                             item.displayProperties.icon,
                                             item.classType,
-                                            item.defaultDamageType
+                                            item.defaultDamageType,
+                                            false,
+                                            -1,
+                                            -1
                                         );
                                     } else if (
                                         item.itemType === 2 &&
@@ -139,7 +172,10 @@ const Home = () => {
                                             item.inventory.tierTypeName,
                                             item.equippingBlock.equipmentSlotTypeHash,
                                             item.displayProperties.icon,
-                                            item.classType
+                                            item.classType,
+                                            false,
+                                            -1,
+                                            -1
                                         );
                                     } else if (item.itemType === 16 && item.classType !== 3) {
                                         localStorage.setItem(item.talentGrid.buildName, item.displayProperties.name);
@@ -147,6 +183,7 @@ const Home = () => {
                                             item.talentGrid.buildName + "_icon",
                                             "https://www.bungie.net" + item.displayProperties.icon
                                         );
+                                        localStorage.setItem(item.hash, item.talentGrid.buildName);
                                     }
                                 }
 
@@ -171,9 +208,20 @@ const Home = () => {
                                         localStorage.setItem("power_hash", slot.hash);
                                     }
                                 }
-                            })
-                            .catch((error) => {
-                                console.log(error);
+
+                                keys = Object.keys(data.DestinyInventoryBucketDefinition);
+
+                                for (let i = 0; i < keys.length; i++) {
+                                    if (
+                                        data.DestinyInventoryBucketDefinition[keys[i]].displayProperties.name ===
+                                        "General"
+                                    ) {
+                                        localStorage.setItem(
+                                            "vault_hash",
+                                            data.DestinyInventoryBucketDefinition[keys[i]].hash
+                                        );
+                                    }
+                                }
                             });
                     });
             });
@@ -181,7 +229,7 @@ const Home = () => {
 
     return (
         <div className="h-screen w-screen bg-gray-700">
-            <NavBar />
+            <NavBar onLogout={onLogout} />
             <Randomizer />
         </div>
     );

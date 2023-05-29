@@ -1,3 +1,18 @@
+import Dexie from "dexie";
+
+const db = new Dexie("D2Randomizer");
+db.version(1).stores({
+    weapons: "hash, name, type, tier, slot, ammoType, icon, owned, inInv, equipped",
+    titan_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
+    hunter_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
+    warlock_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
+});
+
+const weapons = db.table("weapons");
+const titan_armour = db.table("titan_armour");
+const hunter_armour = db.table("hunter_armour");
+const warlock_armour = db.table("warlock_armour");
+
 const Login = () => {
     if (window.location.href.includes("code=")) {
         const clientId = import.meta.env.VITE_CLIENT_ID;
@@ -73,7 +88,84 @@ const Login = () => {
                                     localStorage.setItem("d2_membership_id", result.Response[0].membershipId);
                                     localStorage.setItem("d2_membership_type", result.Response[0].membershipType);
 
-                                    window.location.href = "/home";
+                                    fetch(
+                                        `https://www.bungie.net/Platform/Destiny2/${result.Response[0].membershipType}/Profile/${result.Response[0].membershipId}/?components=102,200,201,205,300`,
+                                        {
+                                            method: "GET",
+                                            headers: {
+                                                "X-API-Key": apiKey,
+                                                Authorization: "Bearer " + localStorage.getItem("access_token"),
+                                            },
+                                        }
+                                    )
+                                        .then((response) => response.json())
+                                        .then((result) => {
+                                            console.log(result.Response);
+
+                                            const vaultHash = parseInt(localStorage.getItem("vault_hash") as string);
+                                            const kinetic_hash = parseInt(
+                                                localStorage.getItem("kinetic_hash") as string
+                                            );
+                                            const energy_hash = parseInt(localStorage.getItem("energy_hash") as string);
+                                            const power_hash = parseInt(localStorage.getItem("power_hash") as string);
+                                            const helmet_hash = parseInt(localStorage.getItem("helmet_hash") as string);
+                                            const gauntlets_hash = parseInt(
+                                                localStorage.getItem("gauntlets_hash") as string
+                                            );
+                                            const chest_armor_hash = parseInt(
+                                                localStorage.getItem("chest_hash") as string
+                                            );
+                                            const boots_hash = parseInt(localStorage.getItem("boots_hash") as string);
+
+                                            let items = result.Response.profileInventory.data.items;
+
+                                            for (let i = 0; i < items.length; i++) {
+                                                if (items[i].bucketHash === vaultHash) {
+                                                    weapons
+                                                        .update(items[i].itemHash, {
+                                                            owned: true,
+                                                        })
+                                                        .then((updated) => {
+                                                            if (!updated) {
+                                                                titan_armour
+                                                                    .update(items[i].itemHash, {
+                                                                        owned: true,
+                                                                    })
+                                                                    .then((updated) => {
+                                                                        if (!updated) {
+                                                                            hunter_armour
+                                                                                .update(items[i].itemHash, {
+                                                                                    owned: true,
+                                                                                })
+                                                                                .then((updated) => {
+                                                                                    if (!updated) {
+                                                                                        warlock_armour.update(
+                                                                                            items[i].itemHash,
+                                                                                            {
+                                                                                                owned: true,
+                                                                                            }
+                                                                                        );
+                                                                                    }
+                                                                                });
+                                                                        }
+                                                                    });
+                                                            }
+                                                        });
+                                                }
+                                            }
+
+                                            const hasCharacter: boolean[] = [false, false, false];
+                                            const characterIds: string[] = Object.keys(result.Response.characters.data);
+
+                                            for (let i = 0; i < characterIds.length; i++) {
+                                                const classType =
+                                                    result.Response.characters.data[characterIds[i]].classType;
+                                                hasCharacter[classType] = true;
+                                                localStorage.setItem("character_" + classType, characterIds[i]);
+                                            }
+
+                                            // window.location.href = "/home";
+                                        });
                                 });
                         });
                 }
