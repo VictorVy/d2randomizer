@@ -100,8 +100,6 @@ const Login = () => {
                                     )
                                         .then((response) => response.json())
                                         .then((result) => {
-                                            console.log(result.Response);
-
                                             const vaultHash = parseInt(localStorage.getItem("vault_hash") as string);
                                             const kinetic_hash = parseInt(
                                                 localStorage.getItem("kinetic_hash") as string
@@ -162,9 +160,75 @@ const Login = () => {
                                                     result.Response.characters.data[characterIds[i]].classType;
                                                 hasCharacter[classType] = true;
                                                 localStorage.setItem("character_" + classType, characterIds[i]);
+
+                                                const characterInventory =
+                                                    result.Response.characterInventories.data[characterIds[i]].items;
+
+                                                for (let j = 0; j < characterInventory.length; j++) {
+                                                    if (
+                                                        characterInventory[j].bucketHash === kinetic_hash ||
+                                                        characterInventory[j].bucketHash === energy_hash ||
+                                                        characterInventory[j].bucketHash === power_hash
+                                                    ) {
+                                                        weapons.update(characterInventory[j].itemHash, {
+                                                            owned: true,
+                                                            inInv: classType,
+                                                        });
+                                                    } else if (
+                                                        characterInventory[j].bucketHash === helmet_hash ||
+                                                        characterInventory[j].bucketHash === gauntlets_hash ||
+                                                        characterInventory[j].bucketHash === chest_armor_hash ||
+                                                        characterInventory[j].bucketHash === boots_hash
+                                                    ) {
+                                                        const table =
+                                                            classType === 0
+                                                                ? titan_armour
+                                                                : classType === 1
+                                                                ? hunter_armour
+                                                                : warlock_armour;
+                                                        table.update(characterInventory[j].itemHash, {
+                                                            owned: true,
+                                                            inInv: classType,
+                                                        });
+                                                    }
+                                                }
+
+                                                const characterEquipment =
+                                                    result.Response.characterEquipment.data[characterIds[i]].items;
+
+                                                for (let j = 0; j < characterEquipment.length; j++) {
+                                                    if (
+                                                        characterEquipment[j].bucketHash === kinetic_hash ||
+                                                        characterEquipment[j].bucketHash === energy_hash ||
+                                                        characterEquipment[j].bucketHash === power_hash
+                                                    ) {
+                                                        weapons.update(characterEquipment[j].itemHash, {
+                                                            owned: true,
+                                                            inInv: classType,
+                                                            equipped: classType,
+                                                        });
+                                                    } else if (
+                                                        characterEquipment[j].bucketHash === helmet_hash ||
+                                                        characterEquipment[j].bucketHash === gauntlets_hash ||
+                                                        characterEquipment[j].bucketHash === chest_armor_hash ||
+                                                        characterEquipment[j].bucketHash === boots_hash
+                                                    ) {
+                                                        const table =
+                                                            classType === 0
+                                                                ? titan_armour
+                                                                : classType === 1
+                                                                ? hunter_armour
+                                                                : warlock_armour;
+                                                        table.update(characterEquipment[j].itemHash, {
+                                                            owned: true,
+                                                            inInv: classType,
+                                                            equipped: classType,
+                                                        });
+                                                    }
+                                                }
                                             }
 
-                                            // window.location.href = "/home";
+                                            window.location.href = "/home";
                                         });
                                 });
                         });

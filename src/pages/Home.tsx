@@ -90,6 +90,11 @@ const onLogout = () => {
     localStorage.removeItem("has_character_1");
     localStorage.removeItem("has_character_2");
 
+    weapons.filter((weapon) => weapon.owned).modify({ owned: false, inInv: -1, equipped: -1 });
+    titan_armour.filter((armour) => armour.owned).modify({ owned: false, inInv: -1, equipped: -1 });
+    hunter_armour.filter((armour) => armour.owned).modify({ owned: false, inInv: -1, equipped: -1 });
+    warlock_armour.filter((armour) => armour.owned).modify({ owned: false, inInv: -1, equipped: -1 });
+
     window.location.href = "/";
 };
 
