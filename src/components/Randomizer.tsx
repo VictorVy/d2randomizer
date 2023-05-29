@@ -29,6 +29,8 @@ const STASIS = 3;
 const STRAND = 4;
 
 const Randomizer = () => {
+    const logged = localStorage.getItem("access_token") ? true : false;
+
     const SLOT_HASHES: string[] = [
         localStorage.getItem("kinetic_hash")!,
         localStorage.getItem("energy_hash")!,
@@ -143,7 +145,22 @@ const Randomizer = () => {
             setFirstRand(false);
         }
 
-        const randClass = Math.floor(Math.random() * 3);
+        let randClass: number;
+
+        if (logged) {
+            const userClasses = [];
+
+            for (let i = 0; i < 3; i++) {
+                if (localStorage.getItem(`character_${i}`)) {
+                    userClasses.push(i);
+                }
+            }
+
+            randClass = userClasses[Math.floor(Math.random() * userClasses.length)];
+        } else {
+            randClass = Math.floor(Math.random() * 3);
+        }
+
         const randSubclass = Math.floor(Math.random() * 5);
 
         setSelectedClass(classLocked ? selectedClass : randClass);
@@ -194,7 +211,7 @@ const Randomizer = () => {
                 <div className="absolute -left-9 top-1/2 -translate-y-1/2">
                     <Lock onLock={setClassLocked} defaultLocked={true} disable={disableClassLock} />
                 </div>
-                <ClassRadio selected={selectedClass} handleChange={setSelectedClass} disable={disableClassLock} />
+                <ClassRadio selected={selectedClass} handleChange={setSelectedClass} disableAll={disableClassLock} />
             </div>
             <div className="relative">
                 <div className="absolute -left-9 top-1/2 -translate-y-1/2">
