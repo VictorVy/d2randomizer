@@ -93,6 +93,8 @@ const Randomizer = () => {
 
     const chooseWeapon = (selClass: number, slotHash: string, rarity: string) =>
         new Promise((resolve) => {
+            // const table = logged ? weapons : weapons.where("owned").equals("true");
+
             weapons
                 .where("slot")
                 .equals(parseInt(slotHash))
@@ -101,11 +103,15 @@ const Randomizer = () => {
                 )
                 .and((weapon) => weapon.class_type === selClass || weapon.class_type === 3)
                 .toArray()
-                .then((exoticWeapons) => {
-                    const randomIndex = Math.floor(Math.random() * exoticWeapons.length);
-                    const chosenExotic = exoticWeapons[randomIndex];
+                .then((filteredWeapons) => {
+                    if (filteredWeapons.length === 0) {
+                        resolve(chooseWeapon(selClass, slotHash, rarity === "Exotic" ? "!Exotic" : rarity));
+                    } else {
+                        const randomIndex = Math.floor(Math.random() * filteredWeapons.length);
+                        const chosenExotic = filteredWeapons[randomIndex];
 
-                    resolve(chosenExotic);
+                        resolve(chosenExotic);
+                    }
                 });
         });
 
@@ -132,11 +138,15 @@ const Randomizer = () => {
                     rarity.startsWith("!") ? armour.tier !== rarity.substring(1) : armour.tier === rarity
                 )
                 .toArray()
-                .then((exoticArmour) => {
-                    const randomIndex = Math.floor(Math.random() * exoticArmour.length);
-                    const chosenExotic = exoticArmour[randomIndex];
+                .then((filteredArmour) => {
+                    if (filteredArmour.length === 0) {
+                        resolve(chooseArmour(selClass, slotHash, rarity === "Exotic" ? "!Exotic" : rarity));
+                    } else {
+                        const randomIndex = Math.floor(Math.random() * filteredArmour.length);
+                        const chosenExotic = filteredArmour[randomIndex];
 
-                    resolve(chosenExotic);
+                        resolve(chosenExotic);
+                    }
                 });
         });
 
