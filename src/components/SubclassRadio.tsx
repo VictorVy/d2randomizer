@@ -1,12 +1,24 @@
+import Dexie from "dexie";
 import Tooltip from "./Tooltip";
 
 interface SubclassRadioProps {
     selectedClass: number;
-    selectedElement: number;
+    selectedSubclass: number;
     handleChange: (n: number) => void;
 }
 
-const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: SubclassRadioProps) => {
+const db = new Dexie("D2Randomizer");
+db.version(1).stores({
+    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inInv, equipped",
+    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    subclasses: "hash, name, buildName, class_type, icon, inInv, equipped",
+});
+
+const subclasses = db.table("subclasses");
+
+const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: SubclassRadioProps) => {
     const SOLAR = 0;
     const ARC = 1;
     const VOID = 2;
@@ -33,7 +45,7 @@ const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: Subclas
                     name="subclass-radio"
                     onChange={() => handleChange(SOLAR)}
                     defaultChecked
-                    checked={selectedElement === SOLAR}
+                    checked={selectedSubclass === SOLAR}
                 />
                 <img
                     className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
@@ -48,7 +60,7 @@ const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: Subclas
                     name="subclass-radio"
                     onChange={() => handleChange(ARC)}
                     defaultChecked
-                    checked={selectedElement === ARC}
+                    checked={selectedSubclass === ARC}
                 />
                 <img
                     className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
@@ -63,7 +75,7 @@ const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: Subclas
                     name="subclass-radio"
                     onChange={() => handleChange(VOID)}
                     defaultChecked
-                    checked={selectedElement === VOID}
+                    checked={selectedSubclass === VOID}
                 />
                 <img
                     className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
@@ -78,7 +90,7 @@ const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: Subclas
                     name="subclass-radio"
                     onChange={() => handleChange(STASIS)}
                     defaultChecked
-                    checked={selectedElement === STASIS}
+                    checked={selectedSubclass === STASIS}
                 />
                 <img
                     className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
@@ -93,7 +105,7 @@ const SubclassRadio = ({ selectedClass, selectedElement, handleChange }: Subclas
                     name="subclass-radio"
                     onChange={() => handleChange(STRAND)}
                     defaultChecked
-                    checked={selectedElement === STRAND}
+                    checked={selectedSubclass === STRAND}
                 />
                 <img
                     className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"

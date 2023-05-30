@@ -5,16 +5,18 @@ import { useLiveQuery } from "dexie-react-hooks";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
-    weapons: "hash, name, type, tier, slot, ammoType, icon, owned, inInv, equipped",
-    titan_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
-    hunter_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
-    warlock_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
+    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inInv, equipped",
+    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    subclasses: "hash, name, buildName, class_type, icon, inInv, equipped",
 });
 
 const weapons = db.table("weapons");
 const titan_armour = db.table("titan_armour");
 const hunter_armour = db.table("hunter_armour");
 const warlock_armour = db.table("warlock_armour");
+const subclasses = db.table("subclasses");
 
 const addWeapon = async (
     hash: number,
@@ -75,6 +77,26 @@ const addArmour = async (
     });
 };
 
+const addSubclass = async (
+    hash: number,
+    name: string,
+    buildName: string,
+    class_type: number,
+    icon: string,
+    inInv: number,
+    equipped: number
+) => {
+    await subclasses.put({
+        hash: hash,
+        name: name,
+        buildName: buildName,
+        class_type: class_type,
+        icon: icon,
+        inInv: inInv,
+        equipped: equipped,
+    });
+};
+
 const onLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
@@ -86,14 +108,12 @@ const onLogout = () => {
     localStorage.removeItem("character_0");
     localStorage.removeItem("character_1");
     localStorage.removeItem("character_2");
-    localStorage.removeItem("has_character_0");
-    localStorage.removeItem("has_character_1");
-    localStorage.removeItem("has_character_2");
 
     weapons.filter((weapon) => weapon.owned).modify({ owned: false, inInv: -1, equipped: -1 });
     titan_armour.filter((armour) => armour.owned).modify({ owned: false, inInv: -1, equipped: -1 });
     hunter_armour.filter((armour) => armour.owned).modify({ owned: false, inInv: -1, equipped: -1 });
     warlock_armour.filter((armour) => armour.owned).modify({ owned: false, inInv: -1, equipped: -1 });
+    subclasses.filter((subclass) => subclass.inInv === 1).modify({ inInv: -1, equipped: -1 });
 
     window.location.href = "/";
 };
@@ -184,11 +204,16 @@ const Home = () => {
                                         );
                                     } else if (item.itemType === 16 && item.classType !== 3) {
                                         localStorage.setItem(item.talentGrid.buildName, item.displayProperties.name);
-                                        localStorage.setItem(
-                                            item.talentGrid.buildName + "_icon",
-                                            "https://www.bungie.net" + item.displayProperties.icon
+
+                                        addSubclass(
+                                            item.hash,
+                                            item.displayProperties.name,
+                                            item.talentGrid.buildName,
+                                            item.classType,
+                                            "https://www.bungie.net" + item.displayProperties.icon,
+                                            -1,
+                                            -1
                                         );
-                                        localStorage.setItem(item.hash, item.talentGrid.buildName);
                                     }
                                 }
 
@@ -223,6 +248,14 @@ const Home = () => {
                                     ) {
                                         localStorage.setItem(
                                             "vault_hash",
+                                            data.DestinyInventoryBucketDefinition[keys[i]].hash
+                                        );
+                                    } else if (
+                                        data.DestinyInventoryBucketDefinition[keys[i]].displayProperties.name ===
+                                        "Subclass"
+                                    ) {
+                                        localStorage.setItem(
+                                            "subclass_hash",
                                             data.DestinyInventoryBucketDefinition[keys[i]].hash
                                         );
                                     }

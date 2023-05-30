@@ -7,16 +7,18 @@ import Dexie, { IndexableType } from "dexie";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
-    weapons: "hash, name, type, tier, slot, ammoType, icon, owned, inInv, equipped",
-    titan_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
-    hunter_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
-    warlock_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
+    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inInv, equipped",
+    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    subclasses: "hash, name, buildName, class_type, icon, inInv, equipped",
 });
 
 const weapons = db.table("weapons");
 const titan_armour = db.table("titan_armour");
 const hunter_armour = db.table("hunter_armour");
 const warlock_armour = db.table("warlock_armour");
+const subclasses = db.table("subclasses");
 
 const TITAN: number = 0;
 const HUNTER: number = 1;
@@ -91,13 +93,29 @@ const Randomizer = () => {
         }
     }, [slotsLocked]);
 
+    const parseSubclassBuildName = (buildName: string) => {
+        const element: string = buildName.split("_")[0];
+
+        switch (element) {
+            case "thermal":
+                return SOLAR;
+            case "arc":
+                return ARC;
+            case "void":
+                return VOID;
+            case "stasis":
+                return STASIS;
+            default:
+                return STRAND;
+        }
+    };
+
     const chooseWeapon = (selClass: number, slotHash: string, rarity: string) =>
         new Promise((resolve) => {
-            // const table = logged ? weapons : weapons.where("owned").equals("true");
-
             weapons
                 .where("slot")
                 .equals(parseInt(slotHash))
+                .and((weapon) => !logged || weapon.owned)
                 .and((weapon) =>
                     rarity.startsWith("!") ? weapon.tier !== rarity.substring(1) : weapon.tier === rarity
                 )
@@ -134,6 +152,7 @@ const Randomizer = () => {
             armourTable
                 .where("slot")
                 .equals(parseInt(slotHash))
+                .and((armour) => !logged || armour.owned)
                 .and((armour) =>
                     rarity.startsWith("!") ? armour.tier !== rarity.substring(1) : armour.tier === rarity
                 )
@@ -171,7 +190,22 @@ const Randomizer = () => {
             randClass = Math.floor(Math.random() * 3);
         }
 
-        const randSubclass = Math.floor(Math.random() * 5);
+        let randSubclass: number;
+
+        if (logged) {
+            const userSubclasses = await subclasses
+                .where("class_type")
+                .equals(randClass)
+                .and((subclass) => subclass.inInv !== -1)
+                .toArray();
+            console.log(randClass, userSubclasses);
+
+            randSubclass = parseSubclassBuildName(
+                userSubclasses[Math.floor(Math.random() * userSubclasses.length)].buildName
+            );
+        } else {
+            randSubclass = Math.floor(Math.random() * 5);
+        }
 
         setSelectedClass(classLocked ? selectedClass : randClass);
         setSelectedSubclass(subclassLocked ? selectedSubclass : randSubclass);
@@ -229,7 +263,7 @@ const Randomizer = () => {
                 </div>
                 <SubclassRadio
                     selectedClass={selectedClass}
-                    selectedElement={selectedSubclass}
+                    selectedSubclass={selectedSubclass}
                     handleChange={setSelectedSubclass}
                 />
             </div>

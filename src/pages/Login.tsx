@@ -2,16 +2,18 @@ import Dexie from "dexie";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
-    weapons: "hash, name, type, tier, slot, ammoType, icon, owned, inInv, equipped",
-    titan_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
-    hunter_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
-    warlock_armour: "hash, name, type, tier, slot, icon, owned, inInv, equipped",
+    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inInv, equipped",
+    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    subclasses: "hash, name, buildName, class_type, icon, inInv, equipped",
 });
 
 const weapons = db.table("weapons");
 const titan_armour = db.table("titan_armour");
 const hunter_armour = db.table("hunter_armour");
 const warlock_armour = db.table("warlock_armour");
+const subclasses = db.table("subclasses");
 
 const Login = () => {
     if (window.location.href.includes("code=")) {
@@ -99,8 +101,12 @@ const Login = () => {
                                         }
                                     )
                                         .then((response) => response.json())
-                                        .then((result) => {
+                                        .then(async (result) => {
                                             const vaultHash = parseInt(localStorage.getItem("vault_hash") as string);
+                                            const subclassHash = parseInt(
+                                                localStorage.getItem("subclass_hash") as string
+                                            );
+
                                             const kinetic_hash = parseInt(
                                                 localStorage.getItem("kinetic_hash") as string
                                             );
@@ -190,6 +196,10 @@ const Login = () => {
                                                             owned: true,
                                                             inInv: classType,
                                                         });
+                                                    } else if (characterInventory[j].bucketHash === subclassHash) {
+                                                        await subclasses.update(characterInventory[j].itemHash, {
+                                                            inInv: classType,
+                                                        });
                                                     }
                                                 }
 
@@ -221,6 +231,11 @@ const Login = () => {
                                                                 : warlock_armour;
                                                         table.update(characterEquipment[j].itemHash, {
                                                             owned: true,
+                                                            inInv: classType,
+                                                            equipped: classType,
+                                                        });
+                                                    } else if (characterEquipment[j].bucketHash === subclassHash) {
+                                                        await subclasses.update(characterEquipment[j].itemHash, {
                                                             inInv: classType,
                                                             equipped: classType,
                                                         });
