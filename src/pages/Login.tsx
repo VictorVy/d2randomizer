@@ -116,9 +116,7 @@ const Login = () => {
                                             const gauntlets_hash = parseInt(
                                                 localStorage.getItem("gauntlets_hash") as string
                                             );
-                                            const chest_armor_hash = parseInt(
-                                                localStorage.getItem("chest_hash") as string
-                                            );
+                                            const chest_hash = parseInt(localStorage.getItem("chest_hash") as string);
                                             const boots_hash = parseInt(localStorage.getItem("boots_hash") as string);
 
                                             let items = result.Response.profileInventory.data.items;
@@ -158,14 +156,19 @@ const Login = () => {
                                                 }
                                             }
 
-                                            const hasCharacter: boolean[] = [false, false, false];
                                             const characterIds: string[] = Object.keys(result.Response.characters.data);
 
                                             for (let i = 0; i < characterIds.length; i++) {
                                                 const classType =
                                                     result.Response.characters.data[characterIds[i]].classType;
-                                                hasCharacter[classType] = true;
                                                 localStorage.setItem("character_" + classType, characterIds[i]);
+
+                                                const armourTable =
+                                                    classType === 0
+                                                        ? titan_armour
+                                                        : classType === 1
+                                                        ? hunter_armour
+                                                        : warlock_armour;
 
                                                 const characterInventory =
                                                     result.Response.characterInventories.data[characterIds[i]].items;
@@ -176,23 +179,17 @@ const Login = () => {
                                                         characterInventory[j].bucketHash === energy_hash ||
                                                         characterInventory[j].bucketHash === power_hash
                                                     ) {
-                                                        weapons.update(characterInventory[j].itemHash, {
+                                                        await weapons.update(characterInventory[j].itemHash, {
                                                             owned: true,
                                                             inInv: classType,
                                                         });
                                                     } else if (
                                                         characterInventory[j].bucketHash === helmet_hash ||
                                                         characterInventory[j].bucketHash === gauntlets_hash ||
-                                                        characterInventory[j].bucketHash === chest_armor_hash ||
+                                                        characterInventory[j].bucketHash === chest_hash ||
                                                         characterInventory[j].bucketHash === boots_hash
                                                     ) {
-                                                        const table =
-                                                            classType === 0
-                                                                ? titan_armour
-                                                                : classType === 1
-                                                                ? hunter_armour
-                                                                : warlock_armour;
-                                                        table.update(characterInventory[j].itemHash, {
+                                                        await armourTable.update(characterInventory[j].itemHash, {
                                                             owned: true,
                                                             inInv: classType,
                                                         });
@@ -212,7 +209,7 @@ const Login = () => {
                                                         characterEquipment[j].bucketHash === energy_hash ||
                                                         characterEquipment[j].bucketHash === power_hash
                                                     ) {
-                                                        weapons.update(characterEquipment[j].itemHash, {
+                                                        await weapons.update(characterEquipment[j].itemHash, {
                                                             owned: true,
                                                             inInv: classType,
                                                             equipped: classType,
@@ -220,16 +217,10 @@ const Login = () => {
                                                     } else if (
                                                         characterEquipment[j].bucketHash === helmet_hash ||
                                                         characterEquipment[j].bucketHash === gauntlets_hash ||
-                                                        characterEquipment[j].bucketHash === chest_armor_hash ||
+                                                        characterEquipment[j].bucketHash === chest_hash ||
                                                         characterEquipment[j].bucketHash === boots_hash
                                                     ) {
-                                                        const table =
-                                                            classType === 0
-                                                                ? titan_armour
-                                                                : classType === 1
-                                                                ? hunter_armour
-                                                                : warlock_armour;
-                                                        table.update(characterEquipment[j].itemHash, {
+                                                        await armourTable.update(characterEquipment[j].itemHash, {
                                                             owned: true,
                                                             inInv: classType,
                                                             equipped: classType,

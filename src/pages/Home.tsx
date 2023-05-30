@@ -119,9 +119,7 @@ const onLogout = () => {
 };
 
 const Home = () => {
-    const logged = localStorage.getItem("access_token") !== null;
-
-    const fetchWeapons = useLiveQuery(() => weapons.toArray(), []);
+    let fetchWeapons = useLiveQuery(() => weapons.toArray(), []);
 
     if (fetchWeapons?.length === 0) {
         fetch("https://www.bungie.net/Platform/Destiny2/Manifest/", {

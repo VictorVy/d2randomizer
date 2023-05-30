@@ -123,6 +123,8 @@ const Randomizer = () => {
                 .toArray()
                 .then((filteredWeapons) => {
                     if (filteredWeapons.length === 0) {
+                        console.log("No weapons found for slot " + slotHash + " and rarity " + rarity);
+
                         resolve(chooseWeapon(selClass, slotHash, rarity === "Exotic" ? "!Exotic" : rarity));
                     } else {
                         const randomIndex = Math.floor(Math.random() * filteredWeapons.length);
@@ -198,7 +200,6 @@ const Randomizer = () => {
                 .equals(randClass)
                 .and((subclass) => subclass.inInv !== -1)
                 .toArray();
-            console.log(randClass, userSubclasses);
 
             randSubclass = parseSubclassBuildName(
                 userSubclasses[Math.floor(Math.random() * userSubclasses.length)].buildName

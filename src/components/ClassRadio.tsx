@@ -42,9 +42,9 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                 />
                 <svg
                     className={
-                        "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100" +
+                        "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-95 peer-active:opacity-100" +
                         " peer-disabled:" +
-                        (selected === TITAN ? "opacity-90" : "opacity-50")
+                        (selected === TITAN ? "opacity-90" : "opacity-20")
                     }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
@@ -66,9 +66,9 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                 />
                 <svg
                     className={
-                        "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100" +
+                        "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-95 peer-active:opacity-100" +
                         " peer-disabled:" +
-                        (selected === HUNTER ? "opacity-90" : "opacity-50")
+                        (selected === HUNTER ? "opacity-90" : "opacity-20")
                     }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
@@ -89,9 +89,9 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                 />
                 <svg
                     className={
-                        "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100" +
+                        "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-95 peer-active:opacity-100" +
                         " peer-disabled:" +
-                        (selected === WARLOCK ? "opacity-90" : "opacity-50")
+                        (selected === WARLOCK ? "opacity-90" : "opacity-20")
                     }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"

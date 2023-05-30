@@ -1,5 +1,6 @@
 import Dexie from "dexie";
 import Tooltip from "./Tooltip";
+import { useLiveQuery } from "dexie-react-hooks";
 
 interface SubclassRadioProps {
     selectedClass: number;
@@ -18,22 +19,55 @@ db.version(1).stores({
 
 const subclasses = db.table("subclasses");
 
-const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: SubclassRadioProps) => {
-    const SOLAR = 0;
-    const ARC = 1;
-    const VOID = 2;
-    const STASIS = 3;
-    const STRAND = 4;
+const SOLAR = 0;
+const ARC = 1;
+const VOID = 2;
+const STASIS = 3;
+const STRAND = 4;
 
-    function classInterpreter(num: number) {
-        switch (num) {
-            case 0:
-                return "titan";
-            case 1:
-                return "hunter";
-            default:
-                return "warlock";
-        }
+const parseSubclassBuildName = (buildName: string) => {
+    const element: string = buildName.split("_")[0];
+
+    switch (element) {
+        case "thermal":
+            return SOLAR;
+        case "arc":
+            return ARC;
+        case "void":
+            return VOID;
+        case "stasis":
+            return STASIS;
+        default:
+            return STRAND;
+    }
+};
+
+function classInterpreter(num: number) {
+    switch (num) {
+        case 0:
+            return "titan";
+        case 1:
+            return "hunter";
+        default:
+            return "warlock";
+    }
+}
+
+const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: SubclassRadioProps) => {
+    const disableSubclass = [false, false, false, false, false];
+
+    const fetchSubclasses = useLiveQuery(() => subclasses.where("class_type").equals(selectedClass).toArray(), []);
+
+    if (localStorage.getItem("access_token")) {
+        fetchSubclasses?.forEach((subclass) => {
+            const subNum = parseSubclassBuildName(subclass.buildName);
+
+            if (subclass.inInv === -1) {
+                disableSubclass[subNum] = true;
+            } else {
+                disableSubclass[subNum] = false;
+            }
+        });
     }
 
     return (
@@ -46,9 +80,10 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
                     onChange={() => handleChange(SOLAR)}
                     defaultChecked
                     checked={selectedSubclass === SOLAR}
+                    disabled={disableSubclass[SOLAR]}
                 />
                 <img
-                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100 peer-disabled:opacity-20"
                     src="https://www.bungie.net/common/destiny2_content/icons/fedcb91b7ab0584c12f0e9fec730702b.png"
                 />
                 <Tooltip>{localStorage.getItem("thermal_" + classInterpreter(selectedClass))}</Tooltip>
@@ -61,9 +96,10 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
                     onChange={() => handleChange(ARC)}
                     defaultChecked
                     checked={selectedSubclass === ARC}
+                    disabled={disableSubclass[ARC]}
                 />
                 <img
-                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100 peer-disabled:opacity-20"
                     src="https://www.bungie.net/common/destiny2_content/icons/949af7a61d60a8e6071282daafa9e6e9.png"
                 />
                 <Tooltip>{localStorage.getItem("arc_" + classInterpreter(selectedClass))}</Tooltip>
@@ -76,9 +112,10 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
                     onChange={() => handleChange(VOID)}
                     defaultChecked
                     checked={selectedSubclass === VOID}
+                    disabled={disableSubclass[VOID]}
                 />
                 <img
-                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100 peer-disabled:opacity-20"
                     src="https://www.bungie.net/common/destiny2_content/icons/32b112a9460e6f0e2b9ee15dc53fe1c1.png"
                 />
                 <Tooltip>{localStorage.getItem("void_" + classInterpreter(selectedClass))}</Tooltip>
@@ -91,9 +128,10 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
                     onChange={() => handleChange(STASIS)}
                     defaultChecked
                     checked={selectedSubclass === STASIS}
+                    disabled={disableSubclass[STASIS]}
                 />
                 <img
-                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100 peer-disabled:opacity-20"
                     src="https://www.bungie.net/common/destiny2_content/icons/6e441ffa8c8171ce9caf71e51b72fc19.png"
                 />
                 <Tooltip>{localStorage.getItem("stasis_" + classInterpreter(selectedClass))}</Tooltip>
@@ -106,9 +144,10 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
                     onChange={() => handleChange(STRAND)}
                     defaultChecked
                     checked={selectedSubclass === STRAND}
+                    disabled={disableSubclass[STRAND]}
                 />
                 <img
-                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100"
+                    className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-90 peer-active:opacity-100 peer-disabled:opacity-20"
                     src="https://www.bungie.net/common/destiny2_content/icons/41c0024ce809085ac16f4e0777ea0ac4.png"
                 />
                 <Tooltip>{localStorage.getItem("strand_" + classInterpreter(selectedClass))}</Tooltip>
