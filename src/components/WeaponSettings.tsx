@@ -1,7 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Toggle from "./Toggle";
 
 const WeaponSettings = () => {
     let [drop, setDrop] = useState(false);
+
+    let [commons, setCommons] = useState(false);
+    let [uncommons, setUncommons] = useState(false);
+    let [rares, setRares] = useState(false);
+    let [legendaries, setLegendaries] = useState(false);
+    let [exotics, setExotics] = useState(false);
+    let [ensureExotics, setEnsureExotics] = useState(false);
+
+    useEffect(() => {
+        localStorage.setItem("weapon_commons", commons.toString());
+        localStorage.setItem("weapon_uncommons", uncommons.toString());
+        localStorage.setItem("weapon_rares", rares.toString());
+        localStorage.setItem("weapon_legendaries", legendaries.toString());
+        localStorage.setItem("weapon_exotics", exotics.toString());
+        localStorage.setItem("weapon_ensure_exotics", ensureExotics.toString());
+    }, [commons, uncommons, rares, legendaries, exotics, ensureExotics]);
 
     return (
         <div className="flex flex-col items-end space-y-2">
@@ -18,11 +35,16 @@ const WeaponSettings = () => {
             </label>
             <div
                 className={
-                    "flex origin-top flex-col rounded bg-black bg-opacity-10 px-2 py-1 duration-500" +
+                    "flex origin-top flex-col space-y-2 rounded bg-black bg-opacity-10 p-3 duration-500" +
                     (drop ? " opacity-100" : " -translate-y-2 opacity-0")
                 }
             >
-                Bruh
+                <Toggle text="Commons" forWeapons={true} onChange={setCommons} />
+                <Toggle text="Uncommons" forWeapons={true} onChange={setUncommons} />
+                <Toggle text="Rares" forWeapons={true} onChange={setRares} />
+                <Toggle text="Legendaries" forWeapons={true} onChange={setLegendaries} />
+                <Toggle text="Exotics" forWeapons={true} onChange={setExotics} />
+                <Toggle text="Ensure exotic" forWeapons={true} onChange={setEnsureExotics} disabled={!exotics} />
             </div>
         </div>
     );

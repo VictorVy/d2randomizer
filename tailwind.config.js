@@ -14,6 +14,7 @@ export default {
     "./src/components/Tooltip.tsx",
     "./src/components/ArmourSettings.tsx",
     "./src/components/WeaponSettings.tsx",
+    "./src/components/Toggle.tsx",
   ],
   theme: {
     extend: {},
