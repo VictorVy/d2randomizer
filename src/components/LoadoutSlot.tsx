@@ -6,7 +6,7 @@ interface LoadoutSlotProps {
 
 const LoadoutSlot = ({ item }: LoadoutSlotProps) => {
     return (
-        <div className="relative rounded border-2 border-neutral-950 border-opacity-30 bg-black bg-opacity-25 shadow">
+        <div className="relative max-w-max rounded border-2 border-neutral-950 border-opacity-30 bg-black bg-opacity-25 shadow">
             {item ? (
                 <>
                     <img src={"https://bungie.net" + item.icon} width={44} height={44} className="peer rounded" />

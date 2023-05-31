@@ -4,6 +4,8 @@ import LoadoutSlot from "./LoadoutSlot";
 import Lock from "./Lock";
 import SubclassRadio from "./SubclassRadio";
 import Dexie, { IndexableType } from "dexie";
+import ArmourSettings from "./ArmourSettings";
+import WeaponSettings from "./WeaponSettings";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
@@ -251,7 +253,7 @@ const Randomizer = () => {
     }
 
     return (
-        <div className="flex flex-col items-center gap-2 p-8">
+        <div className="flex flex-col items-center gap-2 py-8">
             <div className="relative">
                 <div className="absolute -left-9 top-1/2 -translate-y-1/2">
                     <Lock onLock={setClassLocked} defaultLocked={true} disable={disableClassLock} />
@@ -268,49 +270,57 @@ const Randomizer = () => {
                     handleChange={setSelectedSubclass}
                 />
             </div>
-            <div className="bg-red my-5 grid grid-cols-2 gap-x-28 gap-y-7">
-                <div className="relative">
-                    <LoadoutSlot item={slotItems[0]} /> {/* kinetic weapon */}
-                    <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
-                        <Lock onLock={(locked: boolean) => setSlotLocked(0, locked)} disable={firstRand} />
+            <div className="my-5 grid w-screen grid-flow-col grid-cols-[auto_max-content_auto] space-x-6">
+                <div className="flex justify-end">
+                    <WeaponSettings />
+                </div>
+                <div className="grid grid-cols-[max-content_max-content] gap-x-28 gap-y-7">
+                    <div className="relative">
+                        <LoadoutSlot item={slotItems[0]} /> {/* kinetic weapon */}
+                        <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
+                            <Lock onLock={(locked: boolean) => setSlotLocked(0, locked)} disable={firstRand} />
+                        </div>
+                    </div>
+                    <div className="relative">
+                        <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
+                            <Lock onLock={(locked: boolean) => setSlotLocked(3, locked)} disable={firstRand} />
+                        </div>
+                        <LoadoutSlot item={slotItems[3]} /> {/* helmet */}
+                    </div>
+                    <div className="relative">
+                        <LoadoutSlot item={slotItems[1]} /> {/* energy weapon */}
+                        <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
+                            <Lock onLock={(locked: boolean) => setSlotLocked(1, locked)} disable={firstRand} />
+                        </div>
+                    </div>
+                    <div className="relative">
+                        <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
+                            <Lock onLock={(locked: boolean) => setSlotLocked(4, locked)} disable={firstRand} />
+                        </div>
+                        <LoadoutSlot item={slotItems[4]} /> {/* gauntlets */}
+                    </div>
+                    <div className="relative">
+                        <LoadoutSlot item={slotItems[2]} /> {/* power weapon */}
+                        <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
+                            <Lock onLock={(locked: boolean) => setSlotLocked(2, locked)} disable={firstRand} />
+                        </div>
+                    </div>
+                    <div className="relative">
+                        <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
+                            <Lock onLock={(locked: boolean) => setSlotLocked(5, locked)} disable={firstRand} />
+                        </div>
+                        <LoadoutSlot item={slotItems[5]} /> {/* chest */}
+                    </div>
+                    <div />
+                    <div className="relative">
+                        <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
+                            <Lock onLock={(locked: boolean) => setSlotLocked(6, locked)} disable={firstRand} />
+                        </div>
+                        <LoadoutSlot item={slotItems[6]} /> {/* boots */}
                     </div>
                 </div>
-                <div className="relative">
-                    <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
-                        <Lock onLock={(locked: boolean) => setSlotLocked(3, locked)} disable={firstRand} />
-                    </div>
-                    <LoadoutSlot item={slotItems[3]} /> {/* helmet */}
-                </div>
-                <div className="relative">
-                    <LoadoutSlot item={slotItems[1]} /> {/* energy weapon */}
-                    <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
-                        <Lock onLock={(locked: boolean) => setSlotLocked(1, locked)} disable={firstRand} />
-                    </div>
-                </div>
-                <div className="relative">
-                    <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
-                        <Lock onLock={(locked: boolean) => setSlotLocked(4, locked)} disable={firstRand} />
-                    </div>
-                    <LoadoutSlot item={slotItems[4]} /> {/* gauntlets */}
-                </div>
-                <div className="relative">
-                    <LoadoutSlot item={slotItems[2]} /> {/* power weapon */}
-                    <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
-                        <Lock onLock={(locked: boolean) => setSlotLocked(2, locked)} disable={firstRand} />
-                    </div>
-                </div>
-                <div className="relative">
-                    <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
-                        <Lock onLock={(locked: boolean) => setSlotLocked(5, locked)} disable={firstRand} />
-                    </div>
-                    <LoadoutSlot item={slotItems[5]} /> {/* chest */}
-                </div>
-                <div />
-                <div className="relative">
-                    <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
-                        <Lock onLock={(locked: boolean) => setSlotLocked(6, locked)} disable={firstRand} />
-                    </div>
-                    <LoadoutSlot item={slotItems[6]} /> {/* boots */}
+                <div className="flex">
+                    <ArmourSettings />
                 </div>
             </div>
             <button

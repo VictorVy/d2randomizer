@@ -12,6 +12,8 @@ export default {
     "./src/components/Lock.tsx",
     "./src/components/SubclassRadio.tsx",
     "./src/components/Tooltip.tsx",
+    "./src/components/ArmourSettings.tsx",
+    "./src/components/WeaponSettings.tsx",
   ],
   theme: {
     extend: {},
