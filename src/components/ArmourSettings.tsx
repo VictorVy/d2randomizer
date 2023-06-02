@@ -46,7 +46,7 @@ const ArmourSettings = () => {
             <div
                 className={
                     "grid origin-top grid-cols-2 space-x-4 rounded bg-black bg-opacity-10 p-3 duration-500" +
-                    (drop ? " opacity-100" : " -translate-y-2 opacity-0")
+                    (drop ? "" : " invisible -translate-y-2 opacity-0")
                 }
             >
                 <div className="space-y-3">
