@@ -35,18 +35,20 @@ const STRAND = 4;
 const Randomizer = () => {
     const logged = localStorage.getItem("access_token") ? true : false;
 
-    const SLOT_HASHES: string[] = [
-        localStorage.getItem("kinetic_hash")!,
-        localStorage.getItem("energy_hash")!,
-        localStorage.getItem("power_hash")!,
-        localStorage.getItem("helmet_hash")!,
-        localStorage.getItem("gauntlets_hash")!,
-        localStorage.getItem("chest_hash")!,
-        localStorage.getItem("boots_hash")!,
+    const SLOT_HASHES: number[] = [
+        parseInt(localStorage.getItem("kinetic_hash")!),
+        parseInt(localStorage.getItem("energy_hash")!),
+        parseInt(localStorage.getItem("power_hash")!),
+        parseInt(localStorage.getItem("helmet_hash")!),
+        parseInt(localStorage.getItem("gauntlets_hash")!),
+        parseInt(localStorage.getItem("chest_hash")!),
+        parseInt(localStorage.getItem("boots_hash")!),
     ];
 
     let tmpSlotItems: any[] = [undefined, undefined, undefined, undefined, undefined, undefined, undefined];
     const [slotItems, setSlotItems] = useState(tmpSlotItems);
+
+    const slotInstanceIds: string[] = [...tmpSlotItems];
 
     let [selectedClass, setSelectedClass] = useState(1);
     let [selectedSubclass, setSelectedSubclass] = useState(0);
@@ -94,6 +96,18 @@ const Randomizer = () => {
         }
     }, [slotsLocked]);
 
+    // randomize instance ids
+    useEffect(() => {
+        for (let i = 0; i < 7; i++) {
+            if (slotItems[i]) {
+                slotInstanceIds[i] =
+                    slotItems[i].instanceIds[Math.floor(Math.random() * slotItems[i].instanceIds.length)];
+            } else {
+                slotInstanceIds[i] = "";
+            }
+        }
+    }, [slotItems]);
+
     const parseSubclassBuildName = (buildName: string) => {
         const element: string = buildName.split("_")[0];
 
@@ -111,11 +125,11 @@ const Randomizer = () => {
         }
     };
 
-    const chooseWeapon = (selClass: number, slotHash: string, rarities: boolean[], buckets: boolean[]) =>
+    const chooseWeapon = (selClass: number, slotHash: number, rarities: boolean[], buckets: boolean[]) =>
         new Promise((resolve) => {
             weapons
                 .where("slot")
-                .equals(parseInt(slotHash))
+                .equals(slotHash)
                 .and(
                     (weapon) =>
                         !logged ||
@@ -146,7 +160,7 @@ const Randomizer = () => {
                 });
         });
 
-    const chooseArmour = (selClass: number, slotHash: string, rarities: boolean[], buckets: boolean[]) =>
+    const chooseArmour = (selClass: number, slotHash: number, rarities: boolean[], buckets: boolean[]) =>
         new Promise((resolve) => {
             let armourTable: Dexie.Table<any, IndexableType>;
 
@@ -164,7 +178,7 @@ const Randomizer = () => {
 
             armourTable
                 .where("slot")
-                .equals(parseInt(slotHash))
+                .equals(slotHash)
                 .and(
                     (armour) =>
                         !logged ||
@@ -230,7 +244,7 @@ const Randomizer = () => {
         setSelectedClass(classLocked || disableClassLock ? selectedClass : randClass);
         setSelectedSubclass(subclassLocked ? selectedSubclass : randSubclass);
 
-        await randomizeItems(classLocked ? selectedClass : randClass);
+        await randomizeItems(classLocked || disableClassLock ? selectedClass : randClass);
 
         setSlotItems(tmpSlotItems);
     }
@@ -312,6 +326,102 @@ const Randomizer = () => {
         }
     }
 
+    function importItems() {
+        tmpSlotItems = [...slotItems];
+
+        weapons
+            .where("equipped")
+            .equals(selectedClass)
+            .toArray()
+            .then((equippedWeapons) => {
+                equippedWeapons.forEach((item) => {
+                    if (item.slot === SLOT_HASHES[0]) {
+                        tmpSlotItems[0] = item;
+                    } else if (item.slot === SLOT_HASHES[1]) {
+                        tmpSlotItems[1] = item;
+                    } else if (item.slot === SLOT_HASHES[2]) {
+                        tmpSlotItems[2] = item;
+                    }
+                });
+            })
+            .then(() => {
+                const table =
+                    selectedClass === TITAN ? titan_armour : selectedClass === HUNTER ? hunter_armour : warlock_armour;
+
+                table
+                    .where("equipped")
+                    .equals(selectedClass)
+                    .toArray()
+                    .then((equippedArmour) => {
+                        equippedArmour.forEach((item) => {
+                            if (item.slot === SLOT_HASHES[3]) {
+                                tmpSlotItems[3] = item;
+                            } else if (item.slot === SLOT_HASHES[4]) {
+                                tmpSlotItems[4] = item;
+                            } else if (item.slot === SLOT_HASHES[5]) {
+                                tmpSlotItems[5] = item;
+                            } else if (item.slot === SLOT_HASHES[6]) {
+                                tmpSlotItems[6] = item;
+                            }
+                        });
+                    })
+                    .then(() => {
+                        setSlotItems(tmpSlotItems);
+                    });
+            });
+    }
+
+    async function equipItems() {
+        const tasks: Promise<Response>[] = [];
+
+        slotItems.forEach((item, index) => {
+            if (item !== undefined && item.inVault) {
+                console.log(item);
+
+                // tasks.push(
+                fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/TransferItem/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                    },
+                    body: JSON.stringify({
+                        itemReferenceHash: item.hash,
+                        stackSize: 1,
+                        transferToVault: false,
+                        itemId: item.instanceIds[index],
+                        characterId: localStorage.getItem("character_" + selectedClass),
+                        membershipType: localStorage.getItem("d2_membership_type"),
+                    }),
+                }).catch((error) => console.log(error));
+                // );
+            }
+        });
+
+        // Promise.all(tasks).then(() => {
+        //     console.log("done");
+
+        // slotItems.forEach((item, index) => {
+        //     if (item !== undefined) {
+        //         fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItem/", {
+        //             method: "POST",
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //                 Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        //             },
+        //             body: JSON.stringify({
+        //                 itemId: item.instanceIds[index],
+        //                 characterId: localStorage.getItem("character_" + selectedClass),
+        //                 membershipType: localStorage.getItem("d2_membership_type"),
+        //             }),
+        //         }).then((response) => {
+        //             console.log(response);
+        //         });
+        //     }
+        // });
+        // });
+    }
+
     return (
         <div className="flex flex-col items-center gap-2 py-8">
             <div className="relative">
@@ -383,12 +493,28 @@ const Randomizer = () => {
                     <ArmourSettings />
                 </div>
             </div>
-            <button
-                className="rounded border-b-2 border-black bg-gray-900 px-4 py-2 font-semibold text-white shadow-md duration-75 hover:border-gray-900 hover:bg-gray-800"
-                onClick={() => randomize()}
-            >
-                Randomize
-            </button>
+            <div className="relative flex items-center">
+                <button
+                    className="absolute -left-[11.45em] scale-[80%] rounded border-b-2 border-black bg-gray-900 px-4 py-2 text-white shadow-md duration-75 hover:border-gray-900 hover:bg-gray-800 disabled:opacity-50"
+                    onClick={importItems}
+                    disabled={!logged}
+                >
+                    Import Items
+                </button>
+                <button
+                    className="rounded border-b-2 border-black bg-gray-900 px-4 py-2 font-semibold text-white shadow-md duration-75 hover:border-gray-900 hover:bg-gray-800"
+                    onClick={() => randomize()}
+                >
+                    Randomize
+                </button>
+                <button
+                    className="absolute -right-[10.8em] scale-[80%] rounded border-b-2 border-black bg-gray-900 px-4 py-2 text-white shadow-md duration-75 hover:border-gray-900 hover:bg-gray-800 disabled:opacity-50"
+                    onClick={equipItems}
+                    disabled={!logged}
+                >
+                    Equip Items
+                </button>
+            </div>
         </div>
     );
 };

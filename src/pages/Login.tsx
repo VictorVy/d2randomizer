@@ -106,7 +106,6 @@ const Login = () => {
                                             const subclassHash = parseInt(
                                                 localStorage.getItem("subclass_hash") as string
                                             );
-                                            console.log(result.Response);
 
                                             const kinetic_hash = parseInt(
                                                 localStorage.getItem("kinetic_hash") as string
@@ -130,11 +129,11 @@ const Login = () => {
                                                             (weapon: {
                                                                 owned: boolean;
                                                                 inVault: boolean;
-                                                                instanceIds: any[];
+                                                                instanceIds: string[][];
                                                             }) => {
                                                                 weapon.owned = true;
                                                                 weapon.inVault = true;
-                                                                weapon.instanceIds.push(items[i].itemInstanceId);
+                                                                weapon.instanceIds[0].push(items[i].itemInstanceId);
                                                             }
                                                         )
                                                         .then((updated) => {
@@ -145,11 +144,11 @@ const Login = () => {
                                                                         (armour: {
                                                                             owned: boolean;
                                                                             inVault: boolean;
-                                                                            instanceIds: any[];
+                                                                            instanceIds: string[][];
                                                                         }) => {
                                                                             armour.owned = true;
                                                                             armour.inVault = true;
-                                                                            armour.instanceIds.push(
+                                                                            armour.instanceIds[0].push(
                                                                                 items[i].itemInstanceId
                                                                             );
                                                                         }
@@ -162,11 +161,11 @@ const Login = () => {
                                                                                     (armour: {
                                                                                         owned: boolean;
                                                                                         inVault: boolean;
-                                                                                        instanceIds: any[];
+                                                                                        instanceIds: string[][];
                                                                                     }) => {
                                                                                         armour.owned = true;
                                                                                         armour.inVault = true;
-                                                                                        armour.instanceIds.push(
+                                                                                        armour.instanceIds[0].push(
                                                                                             items[i].itemInstanceId
                                                                                         );
                                                                                     }
@@ -178,11 +177,11 @@ const Login = () => {
                                                                                             (armour: {
                                                                                                 owned: boolean;
                                                                                                 inVault: boolean;
-                                                                                                instanceIds: any[];
+                                                                                                instanceIds: string[][];
                                                                                             }) => {
                                                                                                 armour.owned = true;
                                                                                                 armour.inVault = true;
-                                                                                                armour.instanceIds.push(
+                                                                                                armour.instanceIds[0].push(
                                                                                                     items[i]
                                                                                                         .itemInstanceId
                                                                                                 );
@@ -225,11 +224,11 @@ const Login = () => {
                                                             (weapon: {
                                                                 owned: boolean;
                                                                 inInv: number;
-                                                                instanceIds: any[];
+                                                                instanceIds: string[][];
                                                             }) => {
                                                                 weapon.owned = true;
                                                                 weapon.inInv = classType;
-                                                                weapon.instanceIds.push(
+                                                                weapon.instanceIds[1].push(
                                                                     characterInventory[i].itemInstanceId
                                                                 );
                                                             }
@@ -245,11 +244,11 @@ const Login = () => {
                                                             (armour: {
                                                                 owned: boolean;
                                                                 inInv: number;
-                                                                instanceIds: any[];
+                                                                instanceIds: string[][];
                                                             }) => {
                                                                 armour.owned = true;
                                                                 armour.inInv = classType;
-                                                                armour.instanceIds.push(
+                                                                armour.instanceIds[1].push(
                                                                     characterInventory[i].itemInstanceId
                                                                 );
                                                             }
@@ -275,11 +274,11 @@ const Login = () => {
                                                             (weapon: {
                                                                 owned: boolean;
                                                                 equipped: number;
-                                                                instanceIds: any[];
+                                                                instanceIds: string[][];
                                                             }) => {
                                                                 weapon.owned = true;
                                                                 weapon.equipped = classType;
-                                                                weapon.instanceIds.push(
+                                                                weapon.instanceIds[2].push(
                                                                     characterEquipment[i].itemInstanceId
                                                                 );
                                                             }
@@ -295,11 +294,11 @@ const Login = () => {
                                                             (armour: {
                                                                 owned: boolean;
                                                                 equipped: number;
-                                                                instanceIds: any[];
+                                                                instanceIds: string[][];
                                                             }) => {
                                                                 armour.owned = true;
                                                                 armour.equipped = classType;
-                                                                armour.instanceIds.push(
+                                                                armour.instanceIds[2].push(
                                                                     characterEquipment[i].itemInstanceId
                                                                 );
                                                             }

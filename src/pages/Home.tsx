@@ -32,7 +32,7 @@ const addWeapon = async (
     inVault: boolean,
     inInv: number,
     equipped: number,
-    instanceIds: string[]
+    instanceIds: string[][]
 ) => {
     await weapons.put({
         hash: hash,
@@ -64,7 +64,7 @@ const addArmour = async (
     inVault: boolean,
     inInv: number,
     equipped: number,
-    instanceIds: string[]
+    instanceIds: string[][]
 ) => {
     const armour_table: Dexie.Table<any, IndexableType> =
         class_type === 0 ? titan_armour : class_type === 1 ? hunter_armour : warlock_armour;
@@ -125,17 +125,17 @@ const onLogout = () => {
     tasks.push(
         titan_armour
             .filter((armour) => armour.owned)
-            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [] })
+            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
     );
     tasks.push(
         hunter_armour
             .filter((armour) => armour.owned)
-            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [] })
+            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
     );
     tasks.push(
         warlock_armour
             .filter((armour) => armour.owned)
-            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [] })
+            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
     );
     tasks.push(subclasses.filter((subclass) => subclass.inInv === 1).modify({ inInv: -1, equipped: -1 }));
 
@@ -210,7 +210,7 @@ const Home = () => {
                                             false,
                                             -1,
                                             -1,
-                                            []
+                                            [[], [], []]
                                         );
                                     } else if (
                                         item.itemType === 2 &&
@@ -228,7 +228,7 @@ const Home = () => {
                                             false,
                                             -1,
                                             -1,
-                                            []
+                                            [[], [], []]
                                         );
                                     } else if (item.itemType === 16 && item.classType !== 3) {
                                         localStorage.setItem(item.talentGrid.buildName, item.displayProperties.name);
