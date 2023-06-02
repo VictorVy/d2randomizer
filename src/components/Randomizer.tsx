@@ -33,7 +33,10 @@ const STASIS = 3;
 const STRAND = 4;
 
 const Randomizer = () => {
-    const logged = localStorage.getItem("access_token") ? true : false;
+    const logged: boolean = localStorage.getItem("access_token") ? true : false;
+    let accessToken: string = logged ? localStorage.getItem("access_token")! : "";
+
+    const apiKey = import.meta.env.VITE_API_KEY;
 
     const SLOT_HASHES: number[] = [
         parseInt(localStorage.getItem("kinetic_hash")!),
@@ -151,7 +154,6 @@ const Randomizer = () => {
                 slotInstanceIds[i] = undefined;
             }
         }
-
         console.log(slotInstanceIds);
     }, [slotItems]);
 
@@ -419,56 +421,67 @@ const Randomizer = () => {
     }
 
     async function equipItems() {
-        const tasks: Promise<Response>[] = [];
+        let tasks: Promise<any>[] = [];
+        console.log(slotInstanceIds);
 
-        slotItems.forEach((item, index) => {
-            console.log(slotInstanceIds[index]);
+        for (let i = 0; i < 7; i++) {
+            const item = slotItems[i];
 
-            // if (item !== undefined && item.inVault) {
-            //     console.log(item);
+            if (item && slotInstanceIds[i].location === 0) {
+                const charId: string = localStorage.getItem("character_" + selectedClass)!;
+                const instanceId: string = slotInstanceIds[i].id;
 
-            //     // tasks.push(
-            //     fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/TransferItem/", {
-            //         method: "POST",
-            //         headers: {
-            //             "Content-Type": "application/json",
-            //             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            //         },
-            //         body: JSON.stringify({
-            //             itemReferenceHash: item.hash,
-            //             stackSize: 1,
-            //             transferToVault: false,
-            //             itemId: item.instanceIds[index],
-            //             characterId: localStorage.getItem("character_" + selectedClass),
-            //             membershipType: localStorage.getItem("d2_membership_type"),
-            //         }),
-            //     }).catch((error) => console.log(error));
-            //     // );
-            // }
+                tasks.push(transferToChar(item, instanceId, charId));
+            }
+        }
+
+        Promise.all(tasks).then(() => {
+            const charId: string = localStorage.getItem("character_" + selectedClass)!;
+
+            const ids: string[] = slotInstanceIds
+                .filter((instance) => instance !== undefined)
+                .map((instance) => instance.id);
+
+            fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
+                method: "POST",
+                headers: {
+                    "X-API-Key": apiKey,
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer " + accessToken,
+                },
+                body: JSON.stringify({
+                    itemIds: ids,
+                    characterId: charId,
+                    membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
+                }),
+            })
+                .then((response) => response.json())
+                .then((result) => {
+                    console.log(result);
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
         });
+    }
 
-        // Promise.all(tasks).then(() => {
-        //     console.log("done");
-
-        // slotItems.forEach((item, index) => {
-        //     if (item !== undefined) {
-        //         fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItem/", {
-        //             method: "POST",
-        //             headers: {
-        //                 "Content-Type": "application/json",
-        //                 Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        //             },
-        //             body: JSON.stringify({
-        //                 itemId: item.instanceIds[index],
-        //                 characterId: localStorage.getItem("character_" + selectedClass),
-        //                 membershipType: localStorage.getItem("d2_membership_type"),
-        //             }),
-        //         }).then((response) => {
-        //             console.log(response);
-        //         });
-        //     }
-        // });
-        // });
+    async function transferToChar(item: any, instanceId: string, charId: string) {
+        fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/TransferItem/", {
+            method: "POST",
+            headers: {
+                "X-API-Key": apiKey,
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                itemReferenceHash: item.hash,
+                stackSize: 1,
+                transferToVault: false,
+                itemId: instanceId,
+                characterId: charId,
+                membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
+            }),
+        });
     }
 
     return (

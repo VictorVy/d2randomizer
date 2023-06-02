@@ -229,7 +229,7 @@ const Login = () => {
                                                                 weapon.owned = true;
                                                                 weapon.inInv = classType;
                                                                 weapon.instanceIds[1].push(
-                                                                    characterInventory[i].itemInstanceId
+                                                                    characterInventory[j].itemInstanceId
                                                                 );
                                                             }
                                                         );
@@ -249,7 +249,7 @@ const Login = () => {
                                                                 armour.owned = true;
                                                                 armour.inInv = classType;
                                                                 armour.instanceIds[1].push(
-                                                                    characterInventory[i].itemInstanceId
+                                                                    characterInventory[j].itemInstanceId
                                                                 );
                                                             }
                                                         );
@@ -279,7 +279,7 @@ const Login = () => {
                                                                 weapon.owned = true;
                                                                 weapon.equipped = classType;
                                                                 weapon.instanceIds[2].push(
-                                                                    characterEquipment[i].itemInstanceId
+                                                                    characterEquipment[j].itemInstanceId
                                                                 );
                                                             }
                                                         );
@@ -299,7 +299,7 @@ const Login = () => {
                                                                 armour.owned = true;
                                                                 armour.equipped = classType;
                                                                 armour.instanceIds[2].push(
-                                                                    characterEquipment[i].itemInstanceId
+                                                                    characterEquipment[j].itemInstanceId
                                                                 );
                                                             }
                                                         );
