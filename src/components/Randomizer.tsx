@@ -48,7 +48,7 @@ const Randomizer = () => {
     let tmpSlotItems: any[] = [undefined, undefined, undefined, undefined, undefined, undefined, undefined];
     const [slotItems, setSlotItems] = useState(tmpSlotItems);
 
-    const slotInstanceIds: string[] = [...tmpSlotItems];
+    const slotInstanceIds: any[] = [...tmpSlotItems];
 
     let [selectedClass, setSelectedClass] = useState(1);
     let [selectedSubclass, setSelectedSubclass] = useState(0);
@@ -98,14 +98,61 @@ const Randomizer = () => {
 
     // randomize instance ids
     useEffect(() => {
-        for (let i = 0; i < 7; i++) {
+        const weaponsInVault: boolean = localStorage.getItem("weapon_in_vault") === "true" ? true : false;
+        const weaponsInInv: boolean = localStorage.getItem("weapon_in_inventory") === "true" ? true : false;
+        const weaponsEquipped: boolean = localStorage.getItem("weapon_equipped") === "true" ? true : false;
+
+        const armourInVault: boolean = localStorage.getItem("armour_in_vault") === "true" ? true : false;
+        const armourInInv: boolean = localStorage.getItem("armour_in_inventory") === "true" ? true : false;
+        const armourEquipped: boolean = localStorage.getItem("armour_equipped") === "true" ? true : false;
+
+        for (let i = 0; i < 3; i++) {
             if (slotItems[i]) {
-                slotInstanceIds[i] =
-                    slotItems[i].instanceIds[Math.floor(Math.random() * slotItems[i].instanceIds.length)];
+                const allIds: string[] = [
+                    ...(weaponsInVault ? slotItems[i].instanceIds[0] : []),
+                    ...(weaponsInInv ? slotItems[i].instanceIds[1] : []),
+                    ...(weaponsEquipped ? slotItems[i].instanceIds[2] : []),
+                ];
+
+                const randomId: string = allIds[Math.floor(Math.random() * allIds.length)];
+
+                const location: number = slotItems[i].instanceIds[0].includes(randomId)
+                    ? 0
+                    : slotItems[i].instanceIds[1].includes(randomId)
+                    ? 1
+                    : slotItems[i].instanceIds[2].includes(randomId)
+                    ? 2
+                    : -1;
+
+                slotInstanceIds[i] = { location: location, id: randomId };
             } else {
-                slotInstanceIds[i] = "";
+                slotInstanceIds[i] = undefined;
             }
         }
+
+        for (let i = 3; i < 7; i++) {
+            if (slotItems[i]) {
+                const allIds: string[] = [
+                    ...(armourInVault ? slotItems[i].instanceIds[0] : []),
+                    ...(armourInInv ? slotItems[i].instanceIds[1] : []),
+                    ...(armourEquipped ? slotItems[i].instanceIds[2] : []),
+                ];
+
+                const randomId: string = allIds[Math.floor(Math.random() * allIds.length)];
+
+                const location: number = slotItems[i].instanceIds[0].includes(randomId)
+                    ? 0
+                    : slotItems[i].instanceIds[1].includes(randomId)
+                    ? 1
+                    : 2;
+
+                slotInstanceIds[i] = { location: location, id: randomId };
+            } else {
+                slotInstanceIds[i] = undefined;
+            }
+        }
+
+        console.log(slotInstanceIds);
     }, [slotItems]);
 
     const parseSubclassBuildName = (buildName: string) => {
@@ -375,27 +422,29 @@ const Randomizer = () => {
         const tasks: Promise<Response>[] = [];
 
         slotItems.forEach((item, index) => {
-            if (item !== undefined && item.inVault) {
-                console.log(item);
+            console.log(slotInstanceIds[index]);
 
-                // tasks.push(
-                fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/TransferItem/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-                    },
-                    body: JSON.stringify({
-                        itemReferenceHash: item.hash,
-                        stackSize: 1,
-                        transferToVault: false,
-                        itemId: item.instanceIds[index],
-                        characterId: localStorage.getItem("character_" + selectedClass),
-                        membershipType: localStorage.getItem("d2_membership_type"),
-                    }),
-                }).catch((error) => console.log(error));
-                // );
-            }
+            // if (item !== undefined && item.inVault) {
+            //     console.log(item);
+
+            //     // tasks.push(
+            //     fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/TransferItem/", {
+            //         method: "POST",
+            //         headers: {
+            //             "Content-Type": "application/json",
+            //             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            //         },
+            //         body: JSON.stringify({
+            //             itemReferenceHash: item.hash,
+            //             stackSize: 1,
+            //             transferToVault: false,
+            //             itemId: item.instanceIds[index],
+            //             characterId: localStorage.getItem("character_" + selectedClass),
+            //             membershipType: localStorage.getItem("d2_membership_type"),
+            //         }),
+            //     }).catch((error) => console.log(error));
+            //     // );
+            // }
         });
 
         // Promise.all(tasks).then(() => {
