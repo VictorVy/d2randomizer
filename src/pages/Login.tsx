@@ -2,10 +2,10 @@ import Dexie from "dexie";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
-    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inInv, equipped",
-    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
-    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
-    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inVault, inInv, equipped, instanceIds",
+    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
+    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
+    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
     subclasses: "hash, name, buildName, class_type, icon, inInv, equipped",
 });
 
@@ -106,6 +106,7 @@ const Login = () => {
                                             const subclassHash = parseInt(
                                                 localStorage.getItem("subclass_hash") as string
                                             );
+                                            console.log(result.Response);
 
                                             const kinetic_hash = parseInt(
                                                 localStorage.getItem("kinetic_hash") as string
@@ -124,27 +125,67 @@ const Login = () => {
                                             for (let i = 0; i < items.length; i++) {
                                                 if (items[i].bucketHash === vaultHash) {
                                                     weapons
-                                                        .update(items[i].itemHash, {
-                                                            owned: true,
-                                                        })
+                                                        .update(
+                                                            items[i].itemHash,
+                                                            (weapon: {
+                                                                owned: boolean;
+                                                                inVault: boolean;
+                                                                instanceIds: any[];
+                                                            }) => {
+                                                                weapon.owned = true;
+                                                                weapon.inVault = true;
+                                                                weapon.instanceIds.push(items[i].itemInstanceId);
+                                                            }
+                                                        )
                                                         .then((updated) => {
                                                             if (!updated) {
                                                                 titan_armour
-                                                                    .update(items[i].itemHash, {
-                                                                        owned: true,
-                                                                    })
+                                                                    .update(
+                                                                        items[i].itemHash,
+                                                                        (armour: {
+                                                                            owned: boolean;
+                                                                            inVault: boolean;
+                                                                            instanceIds: any[];
+                                                                        }) => {
+                                                                            armour.owned = true;
+                                                                            armour.inVault = true;
+                                                                            armour.instanceIds.push(
+                                                                                items[i].itemInstanceId
+                                                                            );
+                                                                        }
+                                                                    )
                                                                     .then((updated) => {
                                                                         if (!updated) {
                                                                             hunter_armour
-                                                                                .update(items[i].itemHash, {
-                                                                                    owned: true,
-                                                                                })
+                                                                                .update(
+                                                                                    items[i].itemHash,
+                                                                                    (armour: {
+                                                                                        owned: boolean;
+                                                                                        inVault: boolean;
+                                                                                        instanceIds: any[];
+                                                                                    }) => {
+                                                                                        armour.owned = true;
+                                                                                        armour.inVault = true;
+                                                                                        armour.instanceIds.push(
+                                                                                            items[i].itemInstanceId
+                                                                                        );
+                                                                                    }
+                                                                                )
                                                                                 .then((updated) => {
                                                                                     if (!updated) {
                                                                                         warlock_armour.update(
                                                                                             items[i].itemHash,
-                                                                                            {
-                                                                                                owned: true,
+                                                                                            (armour: {
+                                                                                                owned: boolean;
+                                                                                                inVault: boolean;
+                                                                                                instanceIds: any[];
+                                                                                            }) => {
+                                                                                                armour.owned = true;
+                                                                                                armour.inVault = true;
+                                                                                                armour.instanceIds.push(
+                                                                                                    items[i]
+                                                                                                        .itemInstanceId
+                                                                                                );
                                                                                             }
                                                                                         );
                                                                                     }
@@ -179,20 +220,40 @@ const Login = () => {
                                                         characterInventory[j].bucketHash === energy_hash ||
                                                         characterInventory[j].bucketHash === power_hash
                                                     ) {
-                                                        await weapons.update(characterInventory[j].itemHash, {
-                                                            owned: true,
-                                                            inInv: classType,
-                                                        });
+                                                        await weapons.update(
+                                                            characterInventory[j].itemHash,
+                                                            (weapon: {
+                                                                owned: boolean;
+                                                                inInv: number;
+                                                                instanceIds: any[];
+                                                            }) => {
+                                                                weapon.owned = true;
+                                                                weapon.inInv = classType;
+                                                                weapon.instanceIds.push(
+                                                                    characterInventory[i].itemInstanceId
+                                                                );
+                                                            }
+                                                        );
                                                     } else if (
                                                         characterInventory[j].bucketHash === helmet_hash ||
                                                         characterInventory[j].bucketHash === gauntlets_hash ||
                                                         characterInventory[j].bucketHash === chest_hash ||
                                                         characterInventory[j].bucketHash === boots_hash
                                                     ) {
-                                                        await armourTable.update(characterInventory[j].itemHash, {
-                                                            owned: true,
-                                                            inInv: classType,
-                                                        });
+                                                        await armourTable.update(
+                                                            characterInventory[j].itemHash,
+                                                            (armour: {
+                                                                owned: boolean;
+                                                                inInv: number;
+                                                                instanceIds: any[];
+                                                            }) => {
+                                                                armour.owned = true;
+                                                                armour.inInv = classType;
+                                                                armour.instanceIds.push(
+                                                                    characterInventory[i].itemInstanceId
+                                                                );
+                                                            }
+                                                        );
                                                     } else if (characterInventory[j].bucketHash === subclassHash) {
                                                         await subclasses.update(characterInventory[j].itemHash, {
                                                             inInv: classType,
@@ -209,25 +270,42 @@ const Login = () => {
                                                         characterEquipment[j].bucketHash === energy_hash ||
                                                         characterEquipment[j].bucketHash === power_hash
                                                     ) {
-                                                        await weapons.update(characterEquipment[j].itemHash, {
-                                                            owned: true,
-                                                            inInv: classType,
-                                                            equipped: classType,
-                                                        });
+                                                        await weapons.update(
+                                                            characterEquipment[j].itemHash,
+                                                            (weapon: {
+                                                                owned: boolean;
+                                                                equipped: number;
+                                                                instanceIds: any[];
+                                                            }) => {
+                                                                weapon.owned = true;
+                                                                weapon.equipped = classType;
+                                                                weapon.instanceIds.push(
+                                                                    characterEquipment[i].itemInstanceId
+                                                                );
+                                                            }
+                                                        );
                                                     } else if (
                                                         characterEquipment[j].bucketHash === helmet_hash ||
                                                         characterEquipment[j].bucketHash === gauntlets_hash ||
                                                         characterEquipment[j].bucketHash === chest_hash ||
                                                         characterEquipment[j].bucketHash === boots_hash
                                                     ) {
-                                                        await armourTable.update(characterEquipment[j].itemHash, {
-                                                            owned: true,
-                                                            inInv: classType,
-                                                            equipped: classType,
-                                                        });
+                                                        await armourTable.update(
+                                                            characterEquipment[j].itemHash,
+                                                            (armour: {
+                                                                owned: boolean;
+                                                                equipped: number;
+                                                                instanceIds: any[];
+                                                            }) => {
+                                                                armour.owned = true;
+                                                                armour.equipped = classType;
+                                                                armour.instanceIds.push(
+                                                                    characterEquipment[i].itemInstanceId
+                                                                );
+                                                            }
+                                                        );
                                                     } else if (characterEquipment[j].bucketHash === subclassHash) {
                                                         await subclasses.update(characterEquipment[j].itemHash, {
-                                                            inInv: classType,
                                                             equipped: classType,
                                                         });
                                                     }

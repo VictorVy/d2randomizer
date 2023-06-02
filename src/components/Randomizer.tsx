@@ -9,10 +9,10 @@ import WeaponSettings from "./WeaponSettings";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
-    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inInv, equipped",
-    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
-    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
-    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inVault, inInv, equipped, instanceIds",
+    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
+    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
+    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
     subclasses: "hash, name, buildName, class_type, icon, inInv, equipped",
 });
 
@@ -45,8 +45,6 @@ const Randomizer = () => {
         localStorage.getItem("boots_hash")!,
     ];
 
-    let [firstRand, setFirstRand] = useState(true);
-
     let tmpSlotItems: any[] = [undefined, undefined, undefined, undefined, undefined, undefined, undefined];
     const [slotItems, setSlotItems] = useState(tmpSlotItems);
 
@@ -73,24 +71,25 @@ const Randomizer = () => {
     let [disableClassLock, setDisableClassLock] = useState(false);
 
     useEffect(() => {
-        if (!firstRand) {
-            const armourLocked = slotsLocked[3] || slotsLocked[4] || slotsLocked[5] || slotsLocked[6];
+        const armourLocked =
+            (slotItems[3] && slotsLocked[3]) ||
+            (slotItems[4] && slotsLocked[4]) ||
+            (slotItems[5] && slotsLocked[5]) ||
+            (slotItems[6] && slotsLocked[6]);
 
-            setClassLocked(armourLocked);
-            setDisableClassLock(armourLocked);
+        setDisableClassLock(armourLocked);
 
-            for (let i = 0; i < 3; i++) {
-                if (slotItems[i].tier === "Exotic") {
-                    setLockedWeaponExoticSlot(slotsLocked[i] ? i : -1);
-                    break;
-                }
+        for (let i = 0; i < 3; i++) {
+            if (slotItems[i] && slotItems[i].tier === "Exotic") {
+                setLockedWeaponExoticSlot(slotsLocked[i] ? i : -1);
+                break;
             }
+        }
 
-            for (let i = 3; i < 7; i++) {
-                if (slotItems[i].tier === "Exotic") {
-                    setLockedArmourExoticSlot(slotsLocked[i] ? i : -1);
-                    break;
-                }
+        for (let i = 3; i < 7; i++) {
+            if (slotItems[i] && slotItems[i].tier === "Exotic") {
+                setLockedArmourExoticSlot(slotsLocked[i] ? i : -1);
+                break;
             }
         }
     }, [slotsLocked]);
@@ -112,22 +111,32 @@ const Randomizer = () => {
         }
     };
 
-    const chooseWeapon = (selClass: number, slotHash: string, rarity: string) =>
+    const chooseWeapon = (selClass: number, slotHash: string, rarities: boolean[], buckets: boolean[]) =>
         new Promise((resolve) => {
             weapons
                 .where("slot")
                 .equals(parseInt(slotHash))
-                .and((weapon) => !logged || weapon.owned)
-                .and((weapon) =>
-                    rarity.startsWith("!") ? weapon.tier !== rarity.substring(1) : weapon.tier === rarity
+                .and(
+                    (weapon) =>
+                        !logged ||
+                        (weapon.owned &&
+                            ((buckets[0] ? weapon.inVault : false) ||
+                                (buckets[1] ? weapon.inInv !== -1 : false) ||
+                                (buckets[2] ? weapon.equipped !== -1 : false)))
+                )
+                .and(
+                    (weapon) =>
+                        (rarities[0] && weapon.tier === "Common") ||
+                        (rarities[1] && weapon.tier === "Uncommon") ||
+                        (rarities[2] && weapon.tier === "Rare") ||
+                        (rarities[3] && weapon.tier === "Legendary") ||
+                        (rarities[4] && weapon.tier === "Exotic")
                 )
                 .and((weapon) => weapon.class_type === selClass || weapon.class_type === 3)
                 .toArray()
                 .then((filteredWeapons) => {
                     if (filteredWeapons.length === 0) {
-                        console.log("No weapons found for slot " + slotHash + " and rarity " + rarity);
-
-                        resolve(chooseWeapon(selClass, slotHash, rarity === "Exotic" ? "!Exotic" : rarity));
+                        resolve(undefined);
                     } else {
                         const randomIndex = Math.floor(Math.random() * filteredWeapons.length);
                         const chosenExotic = filteredWeapons[randomIndex];
@@ -137,7 +146,7 @@ const Randomizer = () => {
                 });
         });
 
-    const chooseArmour = (selClass: number, slotHash: string, rarity: string) =>
+    const chooseArmour = (selClass: number, slotHash: string, rarities: boolean[], buckets: boolean[]) =>
         new Promise((resolve) => {
             let armourTable: Dexie.Table<any, IndexableType>;
 
@@ -156,14 +165,26 @@ const Randomizer = () => {
             armourTable
                 .where("slot")
                 .equals(parseInt(slotHash))
-                .and((armour) => !logged || armour.owned)
-                .and((armour) =>
-                    rarity.startsWith("!") ? armour.tier !== rarity.substring(1) : armour.tier === rarity
+                .and(
+                    (armour) =>
+                        !logged ||
+                        (armour.owned &&
+                            ((buckets[0] ? armour.inVault : false) ||
+                                (buckets[1] ? armour.inInv !== -1 : false) ||
+                                (buckets[2] ? armour.equipped !== -1 : false)))
+                )
+                .and(
+                    (armour) =>
+                        (rarities[0] && armour.tier === "Common") ||
+                        (rarities[1] && armour.tier === "Uncommon") ||
+                        (rarities[2] && armour.tier === "Rare") ||
+                        (rarities[3] && armour.tier === "Legendary") ||
+                        (rarities[4] && armour.tier === "Exotic")
                 )
                 .toArray()
                 .then((filteredArmour) => {
                     if (filteredArmour.length === 0) {
-                        resolve(chooseArmour(selClass, slotHash, rarity === "Exotic" ? "!Exotic" : rarity));
+                        resolve(undefined);
                     } else {
                         const randomIndex = Math.floor(Math.random() * filteredArmour.length);
                         const chosenExotic = filteredArmour[randomIndex];
@@ -174,10 +195,6 @@ const Randomizer = () => {
         });
 
     async function randomize() {
-        if (firstRand) {
-            setFirstRand(false);
-        }
-
         let randClass: number;
 
         if (logged) {
@@ -210,7 +227,7 @@ const Randomizer = () => {
             randSubclass = Math.floor(Math.random() * 5);
         }
 
-        setSelectedClass(classLocked ? selectedClass : randClass);
+        setSelectedClass(classLocked || disableClassLock ? selectedClass : randClass);
         setSelectedSubclass(subclassLocked ? selectedSubclass : randSubclass);
 
         await randomizeItems(classLocked ? selectedClass : randClass);
@@ -219,35 +236,78 @@ const Randomizer = () => {
     }
 
     async function randomizeItems(selClass: number) {
+        const weaponRarities: boolean[] = [
+            localStorage.getItem("weapon_commons") === "true",
+            localStorage.getItem("weapon_uncommons") === "true",
+            localStorage.getItem("weapon_rares") === "true",
+            localStorage.getItem("weapon_legendaries") === "true",
+            localStorage.getItem("weapon_exotics") === "true",
+        ];
+        const ensureWeaponExotic: boolean = localStorage.getItem("weapon_ensure_exotics") === "true";
+        const armourRarities: boolean[] = [
+            localStorage.getItem("armour_commons") === "true",
+            localStorage.getItem("armour_uncommons") === "true",
+            localStorage.getItem("armour_rares") === "true",
+            localStorage.getItem("armour_legendaries") === "true",
+            localStorage.getItem("armour_exotics") === "true",
+        ];
+        const ensureArmourExotic: boolean = localStorage.getItem("armour_ensure_exotics") === "true";
+
+        const weaponBuckets: boolean[] = [
+            localStorage.getItem("weapon_in_vault") === "true",
+            localStorage.getItem("weapon_in_inventory") === "true",
+            localStorage.getItem("weapon_equipped") === "true",
+        ];
+        const armourBuckets: boolean[] = [
+            localStorage.getItem("armour_in_vault") === "true",
+            localStorage.getItem("armour_in_inventory") === "true",
+            localStorage.getItem("armour_equipped") === "true",
+        ];
+
         let exoticWeaponSlot = -1;
         let exoticArmourSlot = -1;
 
-        if (lockedWeaponExoticSlot === -1) {
-            const unlockedSlots = [0, 1, 2].filter((slot) => !slotsLocked[slot]);
-            exoticWeaponSlot = unlockedSlots[Math.floor(Math.random() * unlockedSlots.length)];
-        }
-        if (lockedArmourExoticSlot === -1) {
-            const unlockedSlots = [3, 4, 5, 6].filter((slot) => !slotsLocked[slot]);
-            exoticArmourSlot = unlockedSlots[Math.floor(Math.random() * unlockedSlots.length)];
-        }
-
         tmpSlotItems = [...slotItems];
 
-        if (lockedWeaponExoticSlot === -1 && !slotsLocked[exoticWeaponSlot]) {
-            tmpSlotItems[exoticWeaponSlot] = await chooseWeapon(selClass, SLOT_HASHES[exoticWeaponSlot], "Exotic");
+        if (lockedWeaponExoticSlot === -1 && weaponRarities.at(-1)) {
+            const unlockedSlots = [0, 1, 2].filter((slot) => !slotsLocked[slot]);
+            exoticWeaponSlot = unlockedSlots[Math.floor(Math.random() * unlockedSlots.length)];
+            tmpSlotItems[exoticWeaponSlot] = await chooseWeapon(
+                selClass,
+                SLOT_HASHES[exoticWeaponSlot],
+                ensureWeaponExotic ? [false, false, false, false, true] : weaponRarities,
+                weaponBuckets
+            );
         }
-        if (lockedArmourExoticSlot === -1 && !slotsLocked[exoticArmourSlot]) {
-            tmpSlotItems[exoticArmourSlot] = await chooseArmour(selClass, SLOT_HASHES[exoticArmourSlot], "Exotic");
+        if (lockedArmourExoticSlot === -1 && armourRarities.at(-1)) {
+            const unlockedSlots = [3, 4, 5, 6].filter((slot) => !slotsLocked[slot]);
+            exoticArmourSlot = unlockedSlots[Math.floor(Math.random() * unlockedSlots.length)];
+            tmpSlotItems[exoticArmourSlot] = await chooseArmour(
+                selClass,
+                SLOT_HASHES[exoticArmourSlot],
+                ensureArmourExotic ? [false, false, false, false, true] : armourRarities,
+                armourBuckets
+            );
         }
 
         for (let i = 0; i < 3; i++) {
             if (i !== exoticWeaponSlot && !slotsLocked[i]) {
-                tmpSlotItems[i] = await chooseWeapon(selClass, SLOT_HASHES[i], "!Exotic");
+                tmpSlotItems[i] = await chooseWeapon(
+                    selClass,
+                    SLOT_HASHES[i],
+                    [...weaponRarities.slice(0, -1), false],
+                    weaponBuckets
+                );
             }
         }
         for (let i = 3; i < 7; i++) {
             if (i !== exoticArmourSlot && !slotsLocked[i]) {
-                tmpSlotItems[i] = await chooseArmour(selClass, SLOT_HASHES[i], "!Exotic");
+                tmpSlotItems[i] = await chooseArmour(
+                    selClass,
+                    SLOT_HASHES[i],
+                    [...armourRarities.slice(0, -1), false],
+                    armourBuckets
+                );
             }
         }
     }
@@ -274,47 +334,47 @@ const Randomizer = () => {
                 <div className="flex justify-end">
                     <WeaponSettings />
                 </div>
-                <div className="grid grid-cols-[max-content_max-content] gap-x-28 gap-y-7">
+                <div className="grid grid-cols-[max-content_max-content] gap-x-28 gap-y-[1.71em]">
                     <div className="relative">
                         <LoadoutSlot item={slotItems[0]} /> {/* kinetic weapon */}
                         <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
-                            <Lock onLock={(locked: boolean) => setSlotLocked(0, locked)} disable={firstRand} />
+                            <Lock onLock={(locked: boolean) => setSlotLocked(0, locked)} />
                         </div>
                     </div>
                     <div className="relative">
                         <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
-                            <Lock onLock={(locked: boolean) => setSlotLocked(3, locked)} disable={firstRand} />
+                            <Lock onLock={(locked: boolean) => setSlotLocked(3, locked)} />
                         </div>
                         <LoadoutSlot item={slotItems[3]} /> {/* helmet */}
                     </div>
                     <div className="relative">
                         <LoadoutSlot item={slotItems[1]} /> {/* energy weapon */}
                         <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
-                            <Lock onLock={(locked: boolean) => setSlotLocked(1, locked)} disable={firstRand} />
+                            <Lock onLock={(locked: boolean) => setSlotLocked(1, locked)} />
                         </div>
                     </div>
                     <div className="relative">
                         <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
-                            <Lock onLock={(locked: boolean) => setSlotLocked(4, locked)} disable={firstRand} />
+                            <Lock onLock={(locked: boolean) => setSlotLocked(4, locked)} />
                         </div>
                         <LoadoutSlot item={slotItems[4]} /> {/* gauntlets */}
                     </div>
                     <div className="relative">
                         <LoadoutSlot item={slotItems[2]} /> {/* power weapon */}
                         <div className="absolute -right-2/3 top-1/2 -translate-y-1/2">
-                            <Lock onLock={(locked: boolean) => setSlotLocked(2, locked)} disable={firstRand} />
+                            <Lock onLock={(locked: boolean) => setSlotLocked(2, locked)} />
                         </div>
                     </div>
                     <div className="relative">
                         <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
-                            <Lock onLock={(locked: boolean) => setSlotLocked(5, locked)} disable={firstRand} />
+                            <Lock onLock={(locked: boolean) => setSlotLocked(5, locked)} />
                         </div>
                         <LoadoutSlot item={slotItems[5]} /> {/* chest */}
                     </div>
                     <div />
                     <div className="relative">
                         <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
-                            <Lock onLock={(locked: boolean) => setSlotLocked(6, locked)} disable={firstRand} />
+                            <Lock onLock={(locked: boolean) => setSlotLocked(6, locked)} />
                         </div>
                         <LoadoutSlot item={slotItems[6]} /> {/* boots */}
                     </div>

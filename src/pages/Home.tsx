@@ -5,10 +5,10 @@ import { useLiveQuery } from "dexie-react-hooks";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
-    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inInv, equipped",
-    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
-    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
-    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inVault, inInv, equipped, instanceIds",
+    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
+    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
+    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
     subclasses: "hash, name, buildName, class_type, icon, inInv, equipped",
 });
 
@@ -29,8 +29,10 @@ const addWeapon = async (
     class_type: number,
     damage_type: number,
     owned: boolean,
+    inVault: boolean,
     inInv: number,
-    equipped: number
+    equipped: number,
+    instanceIds: string[]
 ) => {
     await weapons.put({
         hash: hash,
@@ -43,8 +45,10 @@ const addWeapon = async (
         class_type: class_type,
         damage_type: damage_type,
         owned: owned,
+        inVault: inVault,
         inInv: inInv,
         equipped: equipped,
+        instanceIds: instanceIds,
     });
 };
 
@@ -57,8 +61,10 @@ const addArmour = async (
     icon: string,
     class_type: number,
     owned: boolean,
+    inVault: boolean,
     inInv: number,
-    equipped: number
+    equipped: number,
+    instanceIds: string[]
 ) => {
     const armour_table: Dexie.Table<any, IndexableType> =
         class_type === 0 ? titan_armour : class_type === 1 ? hunter_armour : warlock_armour;
@@ -72,8 +78,10 @@ const addArmour = async (
         icon: icon,
         class_type: class_type,
         owned: owned,
+        inVault: inVault,
         inInv: inInv,
         equipped: equipped,
+        instanceIds: instanceIds,
     });
 };
 
@@ -109,13 +117,31 @@ const onLogout = () => {
     localStorage.removeItem("character_1");
     localStorage.removeItem("character_2");
 
-    weapons.filter((weapon) => weapon.owned).modify({ owned: false, inInv: -1, equipped: -1 });
-    titan_armour.filter((armour) => armour.owned).modify({ owned: false, inInv: -1, equipped: -1 });
-    hunter_armour.filter((armour) => armour.owned).modify({ owned: false, inInv: -1, equipped: -1 });
-    warlock_armour.filter((armour) => armour.owned).modify({ owned: false, inInv: -1, equipped: -1 });
-    subclasses.filter((subclass) => subclass.inInv === 1).modify({ inInv: -1, equipped: -1 });
+    const tasks = [];
 
-    window.location.href = "/";
+    tasks.push(
+        weapons.filter((weapon) => weapon.owned).modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [] })
+    );
+    tasks.push(
+        titan_armour
+            .filter((armour) => armour.owned)
+            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [] })
+    );
+    tasks.push(
+        hunter_armour
+            .filter((armour) => armour.owned)
+            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [] })
+    );
+    tasks.push(
+        warlock_armour
+            .filter((armour) => armour.owned)
+            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [] })
+    );
+    tasks.push(subclasses.filter((subclass) => subclass.inInv === 1).modify({ inInv: -1, equipped: -1 }));
+
+    Promise.all(tasks).then(() => {
+        window.location.href = "/";
+    });
 };
 
 const Home = () => {
@@ -181,8 +207,10 @@ const Home = () => {
                                             item.classType,
                                             item.defaultDamageType,
                                             false,
+                                            false,
                                             -1,
-                                            -1
+                                            -1,
+                                            []
                                         );
                                     } else if (
                                         item.itemType === 2 &&
@@ -197,8 +225,10 @@ const Home = () => {
                                             item.displayProperties.icon,
                                             item.classType,
                                             false,
+                                            false,
                                             -1,
-                                            -1
+                                            -1,
+                                            []
                                         );
                                     } else if (item.itemType === 16 && item.classType !== 3) {
                                         localStorage.setItem(item.talentGrid.buildName, item.displayProperties.name);

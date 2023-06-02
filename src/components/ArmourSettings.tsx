@@ -2,14 +2,20 @@ import { useEffect, useState } from "react";
 import Toggle from "./Toggle";
 
 const ArmourSettings = () => {
+    const logged = localStorage.getItem("access_token") !== null;
+
     let [drop, setDrop] = useState(false);
 
     let [commons, setCommons] = useState(false);
     let [uncommons, setUncommons] = useState(false);
     let [rares, setRares] = useState(false);
-    let [legendaries, setLegendaries] = useState(false);
-    let [exotics, setExotics] = useState(false);
-    let [ensureExotics, setEnsureExotics] = useState(false);
+    let [legendaries, setLegendaries] = useState(true);
+    let [exotics, setExotics] = useState(true);
+    let [ensureExotics, setEnsureExotics] = useState(true);
+
+    let [inVault, setInVault] = useState(logged);
+    let [inInventory, setInInventory] = useState(logged);
+    let [equipped, setEquipped] = useState(logged);
 
     useEffect(() => {
         localStorage.setItem("armour_commons", commons.toString());
@@ -18,7 +24,11 @@ const ArmourSettings = () => {
         localStorage.setItem("armour_legendaries", legendaries.toString());
         localStorage.setItem("armour_exotics", exotics.toString());
         localStorage.setItem("armour_ensure_exotics", ensureExotics.toString());
-    }, [commons, uncommons, rares, legendaries, exotics, ensureExotics]);
+
+        localStorage.setItem("armour_in_vault", inVault.toString());
+        localStorage.setItem("armour_in_inventory", inInventory.toString());
+        localStorage.setItem("armour_equipped", equipped.toString());
+    }, [commons, uncommons, rares, legendaries, exotics, ensureExotics, inVault, inInventory, equipped]);
 
     return (
         <div className="flex flex-col space-y-2">
@@ -35,16 +45,23 @@ const ArmourSettings = () => {
             </label>
             <div
                 className={
-                    "flex origin-top flex-col space-y-2 rounded bg-black bg-opacity-10 p-3 duration-500" +
+                    "grid origin-top grid-cols-2 space-x-4 rounded bg-black bg-opacity-10 p-3 duration-500" +
                     (drop ? " opacity-100" : " -translate-y-2 opacity-0")
                 }
             >
-                <Toggle text="Commons" onChange={setCommons} />
-                <Toggle text="Uncommons" onChange={setUncommons} />
-                <Toggle text="Rares" onChange={setRares} />
-                <Toggle text="Legendaries" onChange={setLegendaries} />
-                <Toggle text="Exotics" onChange={setExotics} />
-                <Toggle text="Ensure exotic" onChange={setEnsureExotics} disabled={!exotics} />
+                <div className="space-y-3">
+                    <Toggle text="Commons" onChange={setCommons} />
+                    <Toggle text="Uncommons" onChange={setUncommons} />
+                    <Toggle text="Rares" onChange={setRares} />
+                    <Toggle text="Legendaries" onChange={setLegendaries} defaultCheck={true} />
+                    <Toggle text="Exotics" onChange={setExotics} defaultCheck={true} />
+                    <Toggle text="Ensure exotic" onChange={setEnsureExotics} disabled={!exotics} defaultCheck={true} />
+                </div>
+                <div className="space-y-3">
+                    <Toggle text="Vault" onChange={setInVault} defaultCheck={logged} disabled={!logged} />
+                    <Toggle text="Inventory" onChange={setInInventory} defaultCheck={logged} disabled={!logged} />
+                    <Toggle text="Equipped" onChange={setEquipped} defaultCheck={logged} disabled={!logged} />
+                </div>
             </div>
         </div>
     );

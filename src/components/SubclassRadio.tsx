@@ -10,10 +10,10 @@ interface SubclassRadioProps {
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
-    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inInv, equipped",
-    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
-    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
-    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inInv, equipped",
+    weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inVault, inInv, equipped, instanceIds",
+    titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
+    hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
+    warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
     subclasses: "hash, name, buildName, class_type, icon, inInv, equipped",
 });
 
@@ -62,16 +62,12 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
         fetchSubclasses?.forEach((subclass) => {
             const subNum = parseSubclassBuildName(subclass.buildName);
 
-            if (subclass.inInv === -1) {
-                disableSubclass[subNum] = true;
-            } else {
-                disableSubclass[subNum] = false;
-            }
+            disableSubclass[subNum] = subclass.inInv === -1 && subclass.equipped === -1;
         });
     }
 
     return (
-        <div className="relative flex items-center space-x-3 rounded bg-black bg-opacity-30 px-3 py-2 shadow">
+        <div className="relative flex items-center space-x-3 rounded bg-black bg-opacity-20 px-3 py-2 shadow">
             <label className="">
                 <input
                     className="peer absolute h-0 w-0"
