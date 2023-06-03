@@ -450,6 +450,8 @@ const Randomizer = () => {
                 .filter((instance, index) => instance !== undefined && !exoticSlots.includes(index))
                 .map((instance) => instance.id);
 
+            // console.log(slotInstanceIds, ids);
+
             fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
                 method: "POST",
                 headers: {
@@ -462,38 +464,46 @@ const Randomizer = () => {
                     characterId: charId,
                     membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
                 }),
-            }).then(() => {
-                ids = [];
+            })
+                .then((response) => response.json())
+                .then((result) => {
+                    console.log(result);
 
-                if (exoticSlots[0] !== -1) {
-                    ids.push(slotInstanceIds[exoticSlots[0]].id);
-                }
-                if (exoticSlots[1] !== -1) {
-                    ids.push(slotInstanceIds[exoticSlots[1]].id);
-                }
+                    ids = [];
 
-                if (ids.length > 0) {
-                    fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
-                        method: "POST",
-                        headers: {
-                            "X-API-Key": apiKey,
-                            "Content-Type": "application/json",
-                            Authorization: "Bearer " + accessToken,
-                        },
-                        body: JSON.stringify({
-                            itemIds: ids,
-                            characterId: charId,
-                            membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
-                        }),
-                    })
-                        .then((response) => response.json())
-                        .then((result) => {
-                            if (result.ErrorCode === 1) {
-                                resetEquipped();
-                            }
-                        });
-                }
-            });
+                    // console.log(slotInstanceIds, ids);
+
+                    if (exoticSlots[0] !== -1) {
+                        ids.push(slotInstanceIds[exoticSlots[0]].id);
+                    }
+                    if (exoticSlots[1] !== -1) {
+                        ids.push(slotInstanceIds[exoticSlots[1]].id);
+                    }
+
+                    if (ids.length > 0) {
+                        fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
+                            method: "POST",
+                            headers: {
+                                "X-API-Key": apiKey,
+                                "Content-Type": "application/json",
+                                Authorization: "Bearer " + accessToken,
+                            },
+                            body: JSON.stringify({
+                                itemIds: ids,
+                                characterId: charId,
+                                membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
+                            }),
+                        })
+                            .then((response) => response.json())
+                            .then((result) => {
+                                console.log(result);
+
+                                if (result.ErrorCode === 1) {
+                                    resetEquipped();
+                                }
+                            });
+                    }
+                });
         });
     }
 
@@ -516,6 +526,8 @@ const Randomizer = () => {
         })
             .then((response) => response.json())
             .then((result) => {
+                console.log(result);
+
                 if (result.ErrorCode === 1) {
                     if (item.slot === SLOT_HASHES[0] || item.slot === SLOT_HASHES[1] || item.slot === SLOT_HASHES[2]) {
                         weapons
@@ -711,10 +723,7 @@ const Randomizer = () => {
                         </div>
                     </div>
                     <div className="relative">
-                        <div
-                            className="-left-2/ 3
-                        absolute top-1/2 -translate-y-1/2"
-                        >
+                        <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
                             <Lock onLock={(locked: boolean) => setSlotLocked(4, locked)} />
                         </div>
                         <LoadoutSlot item={slotItems[4]} /> {/* gauntlets */}
