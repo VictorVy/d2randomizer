@@ -84,20 +84,30 @@ const Randomizer = () => {
 
         setDisableClassLock(armourLocked);
 
-        for (let i = 0; i < 3; i++) {
+        const exoticSlots: number[] = getExoticSlots();
+
+        if (exoticSlots[0] !== -1) {
+            setLockedWeaponExoticSlot(slotsLocked[exoticSlots[0]] ? exoticSlots[0] : -1);
+        }
+        if (exoticSlots[1] !== -1) {
+            setLockedArmourExoticSlot(slotsLocked[exoticSlots[1]] ? exoticSlots[1] : -1);
+        }
+    }, [slotsLocked]);
+
+    const getExoticSlots = () => {
+        const exoticSlots: number[] = [-1, -1];
+
+        for (let i = 0; i < 7; i++) {
             if (slotItems[i] && slotItems[i].tier === "Exotic") {
-                setLockedWeaponExoticSlot(slotsLocked[i] ? i : -1);
-                break;
+                exoticSlots[i < 3 ? 0 : 1] = i;
+                if (i > 2) {
+                    break;
+                }
             }
         }
 
-        for (let i = 3; i < 7; i++) {
-            if (slotItems[i] && slotItems[i].tier === "Exotic") {
-                setLockedArmourExoticSlot(slotsLocked[i] ? i : -1);
-                break;
-            }
-        }
-    }, [slotsLocked]);
+        return exoticSlots;
+    };
 
     // randomize instance ids
     useEffect(() => {
@@ -147,14 +157,15 @@ const Randomizer = () => {
                     ? 0
                     : slotItems[i].instanceIds[1].includes(randomId)
                     ? 1
-                    : 2;
+                    : slotItems[i].instanceIds[2].includes(randomId)
+                    ? 2
+                    : -1;
 
                 slotInstanceIds[i] = { location: location, id: randomId };
             } else {
                 slotInstanceIds[i] = undefined;
             }
         }
-        console.log(slotInstanceIds);
     }, [slotItems]);
 
     const parseSubclassBuildName = (buildName: string) => {
@@ -422,24 +433,21 @@ const Randomizer = () => {
 
     async function equipItems() {
         let tasks: Promise<any>[] = [];
-        console.log(slotInstanceIds);
+        const charId: string = localStorage.getItem("character_" + selectedClass)!;
 
         for (let i = 0; i < 7; i++) {
             const item = slotItems[i];
 
             if (item && slotInstanceIds[i].location === 0) {
-                const charId: string = localStorage.getItem("character_" + selectedClass)!;
-                const instanceId: string = slotInstanceIds[i].id;
-
-                tasks.push(transferToChar(item, instanceId, charId));
+                tasks.push(transferToChar(item, slotInstanceIds[i].id, charId));
             }
         }
 
         Promise.all(tasks).then(() => {
-            const charId: string = localStorage.getItem("character_" + selectedClass)!;
+            const exoticSlots: number[] = getExoticSlots();
 
-            const ids: string[] = slotInstanceIds
-                .filter((instance) => instance !== undefined)
+            let ids: string[] = slotInstanceIds
+                .filter((instance, index) => instance !== undefined && !exoticSlots.includes(index))
                 .map((instance) => instance.id);
 
             fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
@@ -458,9 +466,35 @@ const Randomizer = () => {
                 .then((response) => response.json())
                 .then((result) => {
                     console.log(result);
-                })
-                .catch((error) => {
-                    console.log(error);
+
+                    ids = [];
+
+                    if (exoticSlots[0] !== -1) {
+                        ids.push(slotInstanceIds[exoticSlots[0]].id);
+                    }
+                    if (exoticSlots[1] !== -1) {
+                        ids.push(slotInstanceIds[exoticSlots[1]].id);
+                    }
+
+                    if (ids.length > 0) {
+                        fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
+                            method: "POST",
+                            headers: {
+                                "X-API-Key": apiKey,
+                                "Content-Type": "application/json",
+                                Authorization: "Bearer " + accessToken,
+                            },
+                            body: JSON.stringify({
+                                itemIds: ids,
+                                characterId: charId,
+                                membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
+                            }),
+                        })
+                            .then((response) => response.json())
+                            .then((result) => {
+                                console.log(result);
+                            });
+                    }
                 });
         });
     }

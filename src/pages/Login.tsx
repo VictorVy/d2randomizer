@@ -123,7 +123,7 @@ const Login = () => {
 
                                             for (let i = 0; i < items.length; i++) {
                                                 if (items[i].bucketHash === vaultHash) {
-                                                    weapons
+                                                    await weapons
                                                         .update(
                                                             items[i].itemHash,
                                                             (weapon: {

@@ -117,10 +117,12 @@ const onLogout = () => {
     localStorage.removeItem("character_1");
     localStorage.removeItem("character_2");
 
-    const tasks = [];
+    const tasks: Promise<any>[] = [];
 
     tasks.push(
-        weapons.filter((weapon) => weapon.owned).modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [] })
+        weapons
+            .filter((weapon) => weapon.owned)
+            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
     );
     tasks.push(
         titan_armour
