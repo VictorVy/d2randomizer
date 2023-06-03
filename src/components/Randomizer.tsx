@@ -616,13 +616,13 @@ const Randomizer = () => {
                             .where("hash")
                             .equals(item.hash)
                             .and((weapon) => weapon.inInv === selectedClass)
-                            .first((weapon) => {
+                            .modify((weapon: { equipped: number; inInv: number; instanceIds: string[][] }) => {
                                 weapon.equipped = selectedClass;
                                 weapon.inInv = -1;
                                 weapon.instanceIds = [
                                     weapon.instanceIds[0],
-                                    weapon.instanceIds[1].filter((instanceId: string) => instanceId !== item.id),
-                                    [...weapon.instanceIds[2], item.id],
+                                    weapon.instanceIds[1].filter((iId: string) => iId !== slotInstanceIds[i].id),
+                                    [...weapon.instanceIds[2], slotInstanceIds[i].id],
                                 ];
                             })
                     );
@@ -643,13 +643,13 @@ const Randomizer = () => {
                             .where("hash")
                             .equals(item.hash)
                             .and((armour) => armour.inInv === selectedClass)
-                            .first((armour) => {
+                            .modify((armour: { equipped: number; inInv: number; instanceIds: string[][] }) => {
                                 armour.equipped = selectedClass;
                                 armour.inInv = -1;
                                 armour.instanceIds = [
                                     armour.instanceIds[0],
-                                    armour.instanceIds[1].filter((instanceId: string) => instanceId !== item.id),
-                                    [...armour.instanceIds[2], item.id],
+                                    armour.instanceIds[1].filter((iId: string) => iId !== slotInstanceIds[i].id),
+                                    [...armour.instanceIds[2], slotInstanceIds[i].id],
                                 ];
                             })
                     );
@@ -661,7 +661,7 @@ const Randomizer = () => {
                     selectedClass + "_equipped",
                     JSON.stringify(
                         equippedHashes.map((id: string, index: number) => {
-                            return slotInstanceIds[index] ? slotInstanceIds[index] : id;
+                            return slotInstanceIds[index].id ? slotInstanceIds[index].id : id;
                         })
                     )
                 );
