@@ -117,6 +117,10 @@ const onLogout = () => {
     localStorage.removeItem("character_1");
     localStorage.removeItem("character_2");
 
+    localStorage.removeItem("0_equipped");
+    localStorage.removeItem("1_equipped");
+    localStorage.removeItem("2_equipped");
+
     const tasks: Promise<any>[] = [];
 
     tasks.push(

@@ -263,6 +263,8 @@ const Login = () => {
                                                 const characterEquipment =
                                                     result.Response.characterEquipment.data[characterIds[i]].items;
 
+                                                const charEquipped: string[] = ["", "", "", "", "", "", ""];
+
                                                 for (let j = 0; j < characterEquipment.length; j++) {
                                                     if (
                                                         characterEquipment[j].bucketHash === kinetic_hash ||
@@ -281,6 +283,15 @@ const Login = () => {
                                                                 weapon.instanceIds[2].push(
                                                                     characterEquipment[j].itemInstanceId
                                                                 );
+
+                                                                const itemHash = characterEquipment[j].bucketHash;
+                                                                charEquipped[
+                                                                    itemHash === kinetic_hash
+                                                                        ? 0
+                                                                        : itemHash === energy_hash
+                                                                        ? 1
+                                                                        : 2
+                                                                ] = characterEquipment[j].itemInstanceId;
                                                             }
                                                         );
                                                     } else if (
@@ -301,6 +312,17 @@ const Login = () => {
                                                                 armour.instanceIds[2].push(
                                                                     characterEquipment[j].itemInstanceId
                                                                 );
+
+                                                                const itemHash = characterEquipment[j].bucketHash;
+                                                                charEquipped[
+                                                                    itemHash === helmet_hash
+                                                                        ? 3
+                                                                        : itemHash === gauntlets_hash
+                                                                        ? 4
+                                                                        : itemHash === chest_hash
+                                                                        ? 5
+                                                                        : 6
+                                                                ] = characterEquipment[j].itemInstanceId;
                                                             }
                                                         );
                                                     } else if (characterEquipment[j].bucketHash === subclassHash) {
@@ -309,6 +331,11 @@ const Login = () => {
                                                         });
                                                     }
                                                 }
+
+                                                localStorage.setItem(
+                                                    classType + "_equipped",
+                                                    JSON.stringify(charEquipped)
+                                                );
                                             }
 
                                             window.location.href = "/home";

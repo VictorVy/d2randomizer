@@ -438,7 +438,7 @@ const Randomizer = () => {
         for (let i = 0; i < 7; i++) {
             const item = slotItems[i];
 
-            if (item && slotInstanceIds[i].location === 0) {
+            if (slotInstanceIds[i] && slotInstanceIds[i].location === 0) {
                 tasks.push(transferToChar(item, slotInstanceIds[i].id, charId));
             }
         }
@@ -462,40 +462,38 @@ const Randomizer = () => {
                     characterId: charId,
                     membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
                 }),
-            })
-                .then((response) => response.json())
-                .then((result) => {
-                    console.log(result);
+            }).then(() => {
+                ids = [];
 
-                    ids = [];
+                if (exoticSlots[0] !== -1) {
+                    ids.push(slotInstanceIds[exoticSlots[0]].id);
+                }
+                if (exoticSlots[1] !== -1) {
+                    ids.push(slotInstanceIds[exoticSlots[1]].id);
+                }
 
-                    if (exoticSlots[0] !== -1) {
-                        ids.push(slotInstanceIds[exoticSlots[0]].id);
-                    }
-                    if (exoticSlots[1] !== -1) {
-                        ids.push(slotInstanceIds[exoticSlots[1]].id);
-                    }
-
-                    if (ids.length > 0) {
-                        fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
-                            method: "POST",
-                            headers: {
-                                "X-API-Key": apiKey,
-                                "Content-Type": "application/json",
-                                Authorization: "Bearer " + accessToken,
-                            },
-                            body: JSON.stringify({
-                                itemIds: ids,
-                                characterId: charId,
-                                membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
-                            }),
-                        })
-                            .then((response) => response.json())
-                            .then((result) => {
-                                console.log(result);
-                            });
-                    }
-                });
+                if (ids.length > 0) {
+                    fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
+                        method: "POST",
+                        headers: {
+                            "X-API-Key": apiKey,
+                            "Content-Type": "application/json",
+                            Authorization: "Bearer " + accessToken,
+                        },
+                        body: JSON.stringify({
+                            itemIds: ids,
+                            characterId: charId,
+                            membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
+                        }),
+                    })
+                        .then((response) => response.json())
+                        .then((result) => {
+                            if (result.ErrorCode === 1) {
+                                resetEquipped();
+                            }
+                        });
+                }
+            });
         });
     }
 
@@ -515,6 +513,159 @@ const Randomizer = () => {
                 characterId: charId,
                 membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
             }),
+        })
+            .then((response) => response.json())
+            .then((result) => {
+                if (result.ErrorCode === 1) {
+                    if (item.slot === SLOT_HASHES[0] || item.slot === SLOT_HASHES[1] || item.slot === SLOT_HASHES[2]) {
+                        weapons
+                            .where("hash")
+                            .equals(item.hash)
+                            .and((weapon) => weapon.inVault)
+                            .first((weapon) => {
+                                weapon.inVault = false;
+                                weapon.inInv = selectedClass;
+                                weapon.instanceIds = [
+                                    weapon.instanceIds[0].filter((iId: string) => iId !== instanceId),
+                                    [...weapon.instanceIds[1], instanceId],
+                                    weapon.instanceIds[2],
+                                ];
+                            });
+                    } else {
+                        (selectedClass === TITAN
+                            ? titan_armour
+                            : selectedClass === HUNTER
+                            ? hunter_armour
+                            : warlock_armour
+                        )
+                            .where("hash")
+                            .equals(item.hash)
+                            .and((armour) => armour.inVault)
+                            .first((armour) => {
+                                armour.inVault = false;
+                                armour.inInv = selectedClass;
+                                armour.instanceIds = [
+                                    armour.instanceIds[0].filter((iId: string) => iId !== instanceId),
+                                    [...armour.instanceIds[1], instanceId],
+                                    armour.instanceIds[2],
+                                ];
+                            });
+                    }
+                }
+            });
+    }
+
+    async function resetEquipped() {
+        const changed = slotItems.map((item) => item !== undefined);
+        const changedSlotHashes = SLOT_HASHES.filter((_, index) => changed[index]);
+        const equippedHashes = JSON.parse(localStorage.getItem(selectedClass + "_equipped")!);
+
+        let tasks: Promise<any>[] = [];
+
+        if (changed[0] || changed[1] || changed[2]) {
+            tasks.push(
+                weapons
+                    .where("equipped")
+                    .equals(selectedClass)
+                    .and((weapon) => changedSlotHashes.includes(weapon.slot))
+                    .modify((weapon: { slot: number; equipped: number; inInv: number; instanceIds: string[][] }) => {
+                        const id: string = equippedHashes[SLOT_HASHES.indexOf(weapon.slot)];
+
+                        weapon.equipped = -1;
+                        weapon.inInv = selectedClass;
+                        weapon.instanceIds = [
+                            weapon.instanceIds[0],
+                            [...weapon.instanceIds[1], id],
+                            weapon.instanceIds[2].filter((instanceId: string) => instanceId !== id),
+                        ];
+                    })
+            );
+        }
+        if (changed[3] || changed[4] || changed[5] || changed[6]) {
+            const table =
+                selectedClass === TITAN ? titan_armour : selectedClass === HUNTER ? hunter_armour : warlock_armour;
+
+            tasks.push(
+                table
+                    .where("equipped")
+                    .equals(selectedClass)
+                    .and((armour) => changedSlotHashes.includes(armour.slot))
+                    .modify((armour: { slot: number; equipped: number; inInv: number; instanceIds: string[][] }) => {
+                        const id: string = equippedHashes[SLOT_HASHES.indexOf(armour.slot)];
+
+                        armour.equipped = -1;
+                        armour.inInv = selectedClass;
+                        armour.instanceIds = [
+                            armour.instanceIds[0],
+                            [...armour.instanceIds[1], id],
+                            armour.instanceIds[2].filter((instanceId: string) => instanceId !== id),
+                        ];
+                    })
+            );
+        }
+
+        Promise.all(tasks).then(() => {
+            tasks = [];
+
+            for (let i = 0; i < 3; i++) {
+                if (changed[i]) {
+                    const item = slotItems[i];
+
+                    tasks.push(
+                        weapons
+                            .where("hash")
+                            .equals(item.hash)
+                            .and((weapon) => weapon.inInv === selectedClass)
+                            .first((weapon) => {
+                                weapon.equipped = selectedClass;
+                                weapon.inInv = -1;
+                                weapon.instanceIds = [
+                                    weapon.instanceIds[0],
+                                    weapon.instanceIds[1].filter((instanceId: string) => instanceId !== item.id),
+                                    [...weapon.instanceIds[2], item.id],
+                                ];
+                            })
+                    );
+                }
+            }
+
+            for (let i = 3; i < 7; i++) {
+                if (changed[i]) {
+                    const item = slotItems[i];
+
+                    tasks.push(
+                        (selectedClass === TITAN
+                            ? titan_armour
+                            : selectedClass === HUNTER
+                            ? hunter_armour
+                            : warlock_armour
+                        )
+                            .where("hash")
+                            .equals(item.hash)
+                            .and((armour) => armour.inInv === selectedClass)
+                            .first((armour) => {
+                                armour.equipped = selectedClass;
+                                armour.inInv = -1;
+                                armour.instanceIds = [
+                                    armour.instanceIds[0],
+                                    armour.instanceIds[1].filter((instanceId: string) => instanceId !== item.id),
+                                    [...armour.instanceIds[2], item.id],
+                                ];
+                            })
+                    );
+                }
+            }
+
+            Promise.all(tasks).then(() => {
+                localStorage.setItem(
+                    selectedClass + "_equipped",
+                    JSON.stringify(
+                        equippedHashes.map((id: string, index: number) => {
+                            return slotInstanceIds[index] ? slotInstanceIds[index] : id;
+                        })
+                    )
+                );
+            });
         });
     }
 
@@ -560,7 +711,10 @@ const Randomizer = () => {
                         </div>
                     </div>
                     <div className="relative">
-                        <div className="absolute -left-2/3 top-1/2 -translate-y-1/2">
+                        <div
+                            className="-left-2/ 3
+                        absolute top-1/2 -translate-y-1/2"
+                        >
                             <Lock onLock={(locked: boolean) => setSlotLocked(4, locked)} />
                         </div>
                         <LoadoutSlot item={slotItems[4]} /> {/* gauntlets */}
