@@ -444,14 +444,71 @@ const Randomizer = () => {
         }
 
         Promise.all(tasks).then(() => {
-            const exoticSlots: number[] = getExoticSlots();
+            setTimeout(() => {
+                equipNonExotics(charId);
+            }, 110);
+        });
+    }
 
-            let ids: string[] = slotInstanceIds
-                .filter((instance, index) => instance !== undefined && !exoticSlots.includes(index))
-                .map((instance) => instance.id);
+    async function equipNonExotics(charId: string) {
+        const exoticSlots: number[] = getExoticSlots();
 
-            // console.log(slotInstanceIds, ids);
+        let ids: string[] = slotInstanceIds
+            .filter((instance, index) => instance !== undefined && !exoticSlots.includes(index))
+            .map((instance) => instance.id);
 
+        // console.log(slotInstanceIds, ids);
+
+        fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
+            method: "POST",
+            headers: {
+                "X-API-Key": apiKey,
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + accessToken,
+            },
+            body: JSON.stringify({
+                itemIds: ids,
+                characterId: charId,
+                membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
+            }),
+        })
+            .then((response) => response.json())
+            .then((result) => {
+                console.log(result);
+
+                let success: boolean = true;
+
+                result.Response.equipResults.forEach((equipResult: any) => {
+                    if (equipResult.equipStatus === 1623) {
+                        success = false;
+                    }
+                });
+
+                if (success) {
+                    equipExotics(charId);
+                } else {
+                    console.log("Unsuccessful, retrying equip non exotics in 110ms");
+
+                    setTimeout(() => equipNonExotics(charId), 110);
+                }
+            });
+    }
+
+    async function equipExotics(charId: string) {
+        const exoticSlots: number[] = getExoticSlots();
+
+        const ids = [];
+
+        // console.log(slotInstanceIds, ids);
+
+        if (exoticSlots[0] !== -1) {
+            ids.push(slotInstanceIds[exoticSlots[0]].id);
+        }
+        if (exoticSlots[1] !== -1) {
+            ids.push(slotInstanceIds[exoticSlots[1]].id);
+        }
+
+        if (ids.length > 0) {
             fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
                 method: "POST",
                 headers: {
@@ -469,42 +526,23 @@ const Randomizer = () => {
                 .then((result) => {
                     console.log(result);
 
-                    ids = [];
+                    let success: boolean = true;
 
-                    // console.log(slotInstanceIds, ids);
+                    result.Response.equipResults.forEach((equipResult: any) => {
+                        if (equipResult.equipStatus === 1623) {
+                            success = false;
+                        }
+                    });
 
-                    if (exoticSlots[0] !== -1) {
-                        ids.push(slotInstanceIds[exoticSlots[0]].id);
-                    }
-                    if (exoticSlots[1] !== -1) {
-                        ids.push(slotInstanceIds[exoticSlots[1]].id);
-                    }
+                    if (success) {
+                        setTimeout(resetEquipped, 200);
+                    } else {
+                        console.log("Unsuccessful, retrying equip exotics in 100ms");
 
-                    if (ids.length > 0) {
-                        fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
-                            method: "POST",
-                            headers: {
-                                "X-API-Key": apiKey,
-                                "Content-Type": "application/json",
-                                Authorization: "Bearer " + accessToken,
-                            },
-                            body: JSON.stringify({
-                                itemIds: ids,
-                                characterId: charId,
-                                membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
-                            }),
-                        })
-                            .then((response) => response.json())
-                            .then((result) => {
-                                console.log(result);
-
-                                if (result.ErrorCode === 1) {
-                                    resetEquipped();
-                                }
-                            });
+                        setTimeout(() => equipExotics(charId), 100);
                     }
                 });
-        });
+        }
     }
 
     async function transferToChar(item: any, instanceId: string, charId: string) {
@@ -529,42 +567,45 @@ const Randomizer = () => {
                 console.log(result);
 
                 if (result.ErrorCode === 1) {
-                    if (item.slot === SLOT_HASHES[0] || item.slot === SLOT_HASHES[1] || item.slot === SLOT_HASHES[2]) {
-                        weapons
-                            .where("hash")
-                            .equals(item.hash)
-                            .and((weapon) => weapon.inVault)
-                            .first((weapon) => {
-                                weapon.inVault = false;
-                                weapon.inInv = selectedClass;
-                                weapon.instanceIds = [
-                                    weapon.instanceIds[0].filter((iId: string) => iId !== instanceId),
-                                    [...weapon.instanceIds[1], instanceId],
-                                    weapon.instanceIds[2],
-                                ];
-                            });
-                    } else {
-                        (selectedClass === TITAN
-                            ? titan_armour
-                            : selectedClass === HUNTER
-                            ? hunter_armour
-                            : warlock_armour
-                        )
-                            .where("hash")
-                            .equals(item.hash)
-                            .and((armour) => armour.inVault)
-                            .first((armour) => {
-                                armour.inVault = false;
-                                armour.inInv = selectedClass;
-                                armour.instanceIds = [
-                                    armour.instanceIds[0].filter((iId: string) => iId !== instanceId),
-                                    [...armour.instanceIds[1], instanceId],
-                                    armour.instanceIds[2],
-                                ];
-                            });
-                    }
+                    setTimeout(() => updateIDBVaultToInv(item, instanceId), 200);
+                } else if (result.ErrorCode === 36) {
+                    console.log("Error 36, retrying transfer in 100ms");
+
+                    setTimeout(() => transferToChar(item, instanceId, charId), 100);
                 }
             });
+    }
+
+    async function updateIDBVaultToInv(item: any, instanceId: string) {
+        if (item.slot === SLOT_HASHES[0] || item.slot === SLOT_HASHES[1] || item.slot === SLOT_HASHES[2]) {
+            weapons
+                .where("hash")
+                .equals(item.hash)
+                .and((weapon) => weapon.inVault)
+                .first((weapon) => {
+                    weapon.inVault = false;
+                    weapon.inInv = selectedClass;
+                    weapon.instanceIds = [
+                        weapon.instanceIds[0].filter((iId: string) => iId !== instanceId),
+                        [...weapon.instanceIds[1], instanceId],
+                        weapon.instanceIds[2],
+                    ];
+                });
+        } else {
+            (selectedClass === TITAN ? titan_armour : selectedClass === HUNTER ? hunter_armour : warlock_armour)
+                .where("hash")
+                .equals(item.hash)
+                .and((armour) => armour.inVault)
+                .first((armour) => {
+                    armour.inVault = false;
+                    armour.inInv = selectedClass;
+                    armour.instanceIds = [
+                        armour.instanceIds[0].filter((iId: string) => iId !== instanceId),
+                        [...armour.instanceIds[1], instanceId],
+                        armour.instanceIds[2],
+                    ];
+                });
+        }
     }
 
     async function resetEquipped() {
