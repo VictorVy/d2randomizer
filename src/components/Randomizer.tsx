@@ -474,17 +474,11 @@ const Randomizer = () => {
         })
             .then((response) => response.json())
             .then((result) => {
-                let success: boolean = true;
+                console.log(result);
 
-                result.Response.equipResults.forEach((equipResult: any) => {
-                    if (equipResult.equipStatus === 1623) {
-                        success = false;
-                    }
-                });
-
-                if (success) {
+                if (result.ErrorCode === 1) {
                     equipExotics(charId);
-                } else {
+                } else if (result.ErrorCode === 36) {
                     setTimeout(() => equipNonExotics(charId), 110);
                 }
             });
@@ -520,18 +514,12 @@ const Randomizer = () => {
             })
                 .then((response) => response.json())
                 .then((result) => {
-                    let success: boolean = true;
+                    console.log(result);
 
-                    result.Response.equipResults.forEach((equipResult: any) => {
-                        if (equipResult.equipStatus === 1623) {
-                            success = false;
-                        }
-                    });
-
-                    if (success) {
+                    if (result.ErrorCode === 1) {
                         setTimeout(resetEquipped, 200);
-                    } else {
-                        setTimeout(() => equipExotics(charId), 100);
+                    } else if (result.ErrorCode === 36) {
+                        setTimeout(() => equipExotics(charId), 110);
                     }
                 });
         }
@@ -556,10 +544,12 @@ const Randomizer = () => {
         })
             .then((response) => response.json())
             .then((result) => {
+                console.log(result);
+
                 if (result.ErrorCode === 1) {
                     setTimeout(() => updateIDBVaultToInv(item, instanceId), 200);
                 } else if (result.ErrorCode === 36) {
-                    setTimeout(() => transferToChar(item, instanceId, charId), 100);
+                    setTimeout(() => transferToChar(item, instanceId, charId), 110);
                 }
             });
     }

@@ -122,7 +122,9 @@ const onLogout = () => {
     localStorage.removeItem("1_equipped");
     localStorage.removeItem("2_equipped");
 
-    clearDB();
+    clearDB().then(() => {
+        window.location.reload();
+    });
 };
 
 function clearDB() {
@@ -169,6 +171,19 @@ const formatCode = (code: string) => {
     }
 };
 
+const flagVaultItem = (
+    item: {
+        owned: boolean;
+        inVault: boolean;
+        instanceIds: string[][];
+    },
+    instanceId: string
+) => {
+    item.owned = true;
+    item.inVault = true;
+    item.instanceIds[0].push(instanceId);
+};
+
 const Home = () => {
     let fetchWeapons = useLiveQuery(() => weapons.toArray(), []);
 
@@ -177,26 +192,27 @@ const Home = () => {
             method: "GET",
         })
             .then((response) => response.json())
-            .then((data) => {
+            .then((manifestData) => {
                 // fetch power cap
                 fetch(
-                    "https://www.bungie.net" + data.Response.jsonWorldComponentContentPaths.en.DestinyPowerCapDefinition
+                    "https://www.bungie.net" +
+                        manifestData.Response.jsonWorldComponentContentPaths.en.DestinyPowerCapDefinition
                 )
                     .then((response) => response.json())
-                    .then((data) => {
-                        let keys = Object.keys(data);
+                    .then((powerData) => {
+                        let keys = Object.keys(powerData);
 
                         let numHashes = 0;
 
                         for (let i = 0; i < keys.length; i++) {
-                            if (data[keys[i]].powerCap >= 999900) {
-                                localStorage.setItem("power_cap_" + numHashes, data[keys[i]].hash);
+                            if (powerData[keys[i]].powerCap >= 999900) {
+                                localStorage.setItem("power_cap_" + numHashes, powerData[keys[i]].hash);
                                 numHashes++;
                             }
                         }
 
                         // fetch weapons/armour, item slot hashes, and subclasses
-                        fetch("https://www.bungie.net" + data.Response.jsonWorldContentPaths.en)
+                        fetch("https://www.bungie.net" + manifestData.Response.jsonWorldContentPaths.en)
                             .then((response) => response.json())
                             .then((data) => {
                                 let keys = Object.keys(data.DestinyInventoryItemDefinition);
@@ -384,7 +400,7 @@ const Home = () => {
 
                                         for (let i = 0; i < items.length; i++) {
                                             if (items[i].bucketHash === vaultHash) {
-                                                await weapons
+                                                weapons
                                                     .update(
                                                         items[i].itemHash,
                                                         (weapon: {
@@ -392,9 +408,7 @@ const Home = () => {
                                                             inVault: boolean;
                                                             instanceIds: string[][];
                                                         }) => {
-                                                            weapon.owned = true;
-                                                            weapon.inVault = true;
-                                                            weapon.instanceIds[0].push(items[i].itemInstanceId);
+                                                            flagVaultItem(weapon, items[i].itemInstanceId);
                                                         }
                                                     )
                                                     .then((updated) => {
@@ -407,11 +421,7 @@ const Home = () => {
                                                                         inVault: boolean;
                                                                         instanceIds: string[][];
                                                                     }) => {
-                                                                        armour.owned = true;
-                                                                        armour.inVault = true;
-                                                                        armour.instanceIds[0].push(
-                                                                            items[i].itemInstanceId
-                                                                        );
+                                                                        flagVaultItem(armour, items[i].itemInstanceId);
                                                                     }
                                                                 )
                                                                 .then((updated) => {
@@ -424,9 +434,8 @@ const Home = () => {
                                                                                     inVault: boolean;
                                                                                     instanceIds: string[][];
                                                                                 }) => {
-                                                                                    armour.owned = true;
-                                                                                    armour.inVault = true;
-                                                                                    armour.instanceIds[0].push(
+                                                                                    flagVaultItem(
+                                                                                        armour,
                                                                                         items[i].itemInstanceId
                                                                                     );
                                                                                 }
@@ -440,9 +449,8 @@ const Home = () => {
                                                                                             inVault: boolean;
                                                                                             instanceIds: string[][];
                                                                                         }) => {
-                                                                                            armour.owned = true;
-                                                                                            armour.inVault = true;
-                                                                                            armour.instanceIds[0].push(
+                                                                                            flagVaultItem(
+                                                                                                armour,
                                                                                                 items[i].itemInstanceId
                                                                                             );
                                                                                         }
