@@ -474,8 +474,6 @@ const Randomizer = () => {
         })
             .then((response) => response.json())
             .then((result) => {
-                console.log(result);
-
                 let success: boolean = true;
 
                 result.Response.equipResults.forEach((equipResult: any) => {
@@ -487,8 +485,6 @@ const Randomizer = () => {
                 if (success) {
                     equipExotics(charId);
                 } else {
-                    console.log("Unsuccessful, retrying equip non exotics in 110ms");
-
                     setTimeout(() => equipNonExotics(charId), 110);
                 }
             });
@@ -499,7 +495,7 @@ const Randomizer = () => {
 
         const ids = [];
 
-        // console.log(slotInstanceIds, ids);
+        // console.log(slotInstanceIds);
 
         if (exoticSlots[0] !== -1) {
             ids.push(slotInstanceIds[exoticSlots[0]].id);
@@ -524,8 +520,6 @@ const Randomizer = () => {
             })
                 .then((response) => response.json())
                 .then((result) => {
-                    console.log(result);
-
                     let success: boolean = true;
 
                     result.Response.equipResults.forEach((equipResult: any) => {
@@ -537,8 +531,6 @@ const Randomizer = () => {
                     if (success) {
                         setTimeout(resetEquipped, 200);
                     } else {
-                        console.log("Unsuccessful, retrying equip exotics in 100ms");
-
                         setTimeout(() => equipExotics(charId), 100);
                     }
                 });
@@ -564,13 +556,9 @@ const Randomizer = () => {
         })
             .then((response) => response.json())
             .then((result) => {
-                console.log(result);
-
                 if (result.ErrorCode === 1) {
                     setTimeout(() => updateIDBVaultToInv(item, instanceId), 200);
                 } else if (result.ErrorCode === 36) {
-                    console.log("Error 36, retrying transfer in 100ms");
-
                     setTimeout(() => transferToChar(item, instanceId, charId), 100);
                 }
             });
@@ -582,7 +570,7 @@ const Randomizer = () => {
                 .where("hash")
                 .equals(item.hash)
                 .and((weapon) => weapon.inVault)
-                .first((weapon) => {
+                .modify((weapon) => {
                     weapon.inVault = false;
                     weapon.inInv = selectedClass;
                     weapon.instanceIds = [
@@ -596,7 +584,7 @@ const Randomizer = () => {
                 .where("hash")
                 .equals(item.hash)
                 .and((armour) => armour.inVault)
-                .first((armour) => {
+                .modify((armour) => {
                     armour.inVault = false;
                     armour.inInv = selectedClass;
                     armour.instanceIds = [
@@ -713,9 +701,9 @@ const Randomizer = () => {
                 localStorage.setItem(
                     selectedClass + "_equipped",
                     JSON.stringify(
-                        equippedHashes.map((id: string, index: number) => {
-                            return slotInstanceIds[index].id ? slotInstanceIds[index].id : id;
-                        })
+                        equippedHashes.map((id: string, index: number) =>
+                            slotInstanceIds[index] && slotInstanceIds[index].id ? slotInstanceIds[index].id : id
+                        )
                     )
                 );
             });

@@ -2,6 +2,7 @@ import Dexie, { IndexableType } from "dexie";
 import NavBar from "../components/NavBar";
 import Randomizer from "../components/Randomizer";
 import { useLiveQuery } from "dexie-react-hooks";
+import { useEffect } from "react";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
@@ -121,33 +122,51 @@ const onLogout = () => {
     localStorage.removeItem("1_equipped");
     localStorage.removeItem("2_equipped");
 
-    const tasks: Promise<any>[] = [];
+    clearDB();
+};
 
-    tasks.push(
-        weapons
-            .filter((weapon) => weapon.owned)
-            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
-    );
-    tasks.push(
-        titan_armour
-            .filter((armour) => armour.owned)
-            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
-    );
-    tasks.push(
-        hunter_armour
-            .filter((armour) => armour.owned)
-            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
-    );
-    tasks.push(
-        warlock_armour
-            .filter((armour) => armour.owned)
-            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
-    );
-    tasks.push(subclasses.filter((subclass) => subclass.inInv === 1).modify({ inInv: -1, equipped: -1 }));
+function clearDB() {
+    return new Promise((resolve) => {
+        const tasks: Promise<any>[] = [];
 
-    Promise.all(tasks).then(() => {
-        window.location.href = "/";
+        tasks.push(
+            weapons
+                .filter((weapon) => weapon.owned)
+                .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
+        );
+        tasks.push(
+            titan_armour
+                .filter((armour) => armour.owned)
+                .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
+        );
+        tasks.push(
+            hunter_armour
+                .filter((armour) => armour.owned)
+                .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
+        );
+        tasks.push(
+            warlock_armour
+                .filter((armour) => armour.owned)
+                .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
+        );
+        tasks.push(subclasses.filter((subclass) => subclass.inInv === 1).modify({ inInv: -1, equipped: -1 }));
+
+        Promise.all(tasks).then(resolve);
     });
+}
+
+const formatCode = (code: string) => {
+    if (code.length === 0) {
+        return "0000";
+    } else if (code.length === 1) {
+        return "000" + code;
+    } else if (code.length === 2) {
+        return "00" + code;
+    } else if (code.length === 3) {
+        return "0" + code;
+    } else {
+        return code;
+    }
 };
 
 const Home = () => {
@@ -176,17 +195,14 @@ const Home = () => {
                             }
                         }
 
-                        localStorage.setItem("num_hashes", numHashes.toString());
-                    })
-                    .then(() => {
-                        // fetch weapons/armour, item slot hashes, ad subclasses
+                        // fetch weapons/armour, item slot hashes, and subclasses
                         fetch("https://www.bungie.net" + data.Response.jsonWorldContentPaths.en)
                             .then((response) => response.json())
                             .then((data) => {
                                 let keys = Object.keys(data.DestinyInventoryItemDefinition);
 
                                 const nonSunset = (hash: number) => {
-                                    for (let i = 0; i < parseInt(localStorage.getItem("num_hashes") as string); i++) {
+                                    for (let i = 0; i < numHashes; i++) {
                                         if (hash === parseInt(localStorage.getItem("power_cap_" + i) as string)) {
                                             return true;
                                         }
@@ -298,6 +314,292 @@ const Home = () => {
                     });
             });
     }
+
+    useEffect(() => {
+        if (localStorage.getItem("access_token")) {
+            const apiKey: string = import.meta.env.VITE_API_KEY;
+            const bungieMembershipId = localStorage.getItem("bungie_membership_id")!;
+
+            clearDB().then(() => {
+                fetch(`https://www.bungie.net/Platform//User/GetBungieNetUserById/${bungieMembershipId}/`, {
+                    method: "GET",
+                    headers: {
+                        "X-API-Key": apiKey,
+                    },
+                })
+                    .then((response) => response.json())
+                    .then((result) => {
+                        const displayName: string = result.Response.cachedBungieGlobalDisplayName;
+                        const displayNameCode: string = formatCode(
+                            result.Response.cachedBungieGlobalDisplayNameCode.toString()
+                        );
+
+                        localStorage.setItem("bungie_display_name", displayName);
+                        localStorage.setItem("bungie_display_name_code", displayNameCode);
+                        localStorage.setItem("pfp_path", "https://www.bungie.net" + result.Response.profilePicturePath);
+
+                        fetch(
+                            `https://www.bungie.net/Platform/Destiny2/SearchDestinyPlayer/-1/${displayName}%23${displayNameCode}/`,
+                            {
+                                method: "GET",
+                                headers: {
+                                    "X-API-Key": apiKey,
+                                },
+                            }
+                        )
+                            .then((response) => response.json())
+                            .then((result) => {
+                                const d2MembershipId: string = result.Response[0].membershipId;
+                                const d2MembershipType: string = result.Response[0].membershipType;
+
+                                localStorage.setItem("d2_membership_id", d2MembershipId);
+                                localStorage.setItem("d2_membership_type", d2MembershipType);
+
+                                fetch(
+                                    `https://www.bungie.net/Platform/Destiny2/${d2MembershipType}/Profile/${d2MembershipId}/?components=102,200,201,205,300`,
+                                    {
+                                        method: "GET",
+                                        headers: {
+                                            "X-API-Key": apiKey,
+                                            Authorization: "Bearer " + localStorage.getItem("access_token"),
+                                        },
+                                    }
+                                )
+                                    .then((response) => response.json())
+                                    .then(async (result) => {
+                                        const vaultHash = parseInt(localStorage.getItem("vault_hash") as string);
+                                        const subclassHash = parseInt(localStorage.getItem("subclass_hash") as string);
+
+                                        const kinetic_hash = parseInt(localStorage.getItem("kinetic_hash") as string);
+                                        const energy_hash = parseInt(localStorage.getItem("energy_hash") as string);
+                                        const power_hash = parseInt(localStorage.getItem("power_hash") as string);
+                                        const helmet_hash = parseInt(localStorage.getItem("helmet_hash") as string);
+                                        const gauntlets_hash = parseInt(
+                                            localStorage.getItem("gauntlets_hash") as string
+                                        );
+                                        const chest_hash = parseInt(localStorage.getItem("chest_hash") as string);
+                                        const boots_hash = parseInt(localStorage.getItem("boots_hash") as string);
+
+                                        let items = result.Response.profileInventory.data.items;
+
+                                        for (let i = 0; i < items.length; i++) {
+                                            if (items[i].bucketHash === vaultHash) {
+                                                await weapons
+                                                    .update(
+                                                        items[i].itemHash,
+                                                        (weapon: {
+                                                            owned: boolean;
+                                                            inVault: boolean;
+                                                            instanceIds: string[][];
+                                                        }) => {
+                                                            weapon.owned = true;
+                                                            weapon.inVault = true;
+                                                            weapon.instanceIds[0].push(items[i].itemInstanceId);
+                                                        }
+                                                    )
+                                                    .then((updated) => {
+                                                        if (!updated) {
+                                                            titan_armour
+                                                                .update(
+                                                                    items[i].itemHash,
+                                                                    (armour: {
+                                                                        owned: boolean;
+                                                                        inVault: boolean;
+                                                                        instanceIds: string[][];
+                                                                    }) => {
+                                                                        armour.owned = true;
+                                                                        armour.inVault = true;
+                                                                        armour.instanceIds[0].push(
+                                                                            items[i].itemInstanceId
+                                                                        );
+                                                                    }
+                                                                )
+                                                                .then((updated) => {
+                                                                    if (!updated) {
+                                                                        hunter_armour
+                                                                            .update(
+                                                                                items[i].itemHash,
+                                                                                (armour: {
+                                                                                    owned: boolean;
+                                                                                    inVault: boolean;
+                                                                                    instanceIds: string[][];
+                                                                                }) => {
+                                                                                    armour.owned = true;
+                                                                                    armour.inVault = true;
+                                                                                    armour.instanceIds[0].push(
+                                                                                        items[i].itemInstanceId
+                                                                                    );
+                                                                                }
+                                                                            )
+                                                                            .then((updated) => {
+                                                                                if (!updated) {
+                                                                                    warlock_armour.update(
+                                                                                        items[i].itemHash,
+                                                                                        (armour: {
+                                                                                            owned: boolean;
+                                                                                            inVault: boolean;
+                                                                                            instanceIds: string[][];
+                                                                                        }) => {
+                                                                                            armour.owned = true;
+                                                                                            armour.inVault = true;
+                                                                                            armour.instanceIds[0].push(
+                                                                                                items[i].itemInstanceId
+                                                                                            );
+                                                                                        }
+                                                                                    );
+                                                                                }
+                                                                            });
+                                                                    }
+                                                                });
+                                                        }
+                                                    });
+                                            }
+                                        }
+
+                                        const characterIds: string[] = Object.keys(result.Response.characters.data);
+
+                                        for (let i = 0; i < characterIds.length; i++) {
+                                            const classType =
+                                                result.Response.characters.data[characterIds[i]].classType;
+                                            localStorage.setItem("character_" + classType, characterIds[i]);
+
+                                            const armourTable =
+                                                classType === 0
+                                                    ? titan_armour
+                                                    : classType === 1
+                                                    ? hunter_armour
+                                                    : warlock_armour;
+
+                                            const characterInventory =
+                                                result.Response.characterInventories.data[characterIds[i]].items;
+
+                                            for (let j = 0; j < characterInventory.length; j++) {
+                                                if (
+                                                    characterInventory[j].bucketHash === kinetic_hash ||
+                                                    characterInventory[j].bucketHash === energy_hash ||
+                                                    characterInventory[j].bucketHash === power_hash
+                                                ) {
+                                                    await weapons.update(
+                                                        characterInventory[j].itemHash,
+                                                        (weapon: {
+                                                            owned: boolean;
+                                                            inInv: number;
+                                                            instanceIds: string[][];
+                                                        }) => {
+                                                            weapon.owned = true;
+                                                            weapon.inInv = classType;
+                                                            weapon.instanceIds[1].push(
+                                                                characterInventory[j].itemInstanceId
+                                                            );
+                                                        }
+                                                    );
+                                                } else if (
+                                                    characterInventory[j].bucketHash === helmet_hash ||
+                                                    characterInventory[j].bucketHash === gauntlets_hash ||
+                                                    characterInventory[j].bucketHash === chest_hash ||
+                                                    characterInventory[j].bucketHash === boots_hash
+                                                ) {
+                                                    await armourTable.update(
+                                                        characterInventory[j].itemHash,
+                                                        (armour: {
+                                                            owned: boolean;
+                                                            inInv: number;
+                                                            instanceIds: string[][];
+                                                        }) => {
+                                                            armour.owned = true;
+                                                            armour.inInv = classType;
+                                                            armour.instanceIds[1].push(
+                                                                characterInventory[j].itemInstanceId
+                                                            );
+                                                        }
+                                                    );
+                                                } else if (characterInventory[j].bucketHash === subclassHash) {
+                                                    await subclasses.update(characterInventory[j].itemHash, {
+                                                        inInv: classType,
+                                                    });
+                                                }
+                                            }
+
+                                            const characterEquipment =
+                                                result.Response.characterEquipment.data[characterIds[i]].items;
+
+                                            const charEquipped: string[] = ["", "", "", "", "", "", ""];
+
+                                            for (let j = 0; j < characterEquipment.length; j++) {
+                                                if (
+                                                    characterEquipment[j].bucketHash === kinetic_hash ||
+                                                    characterEquipment[j].bucketHash === energy_hash ||
+                                                    characterEquipment[j].bucketHash === power_hash
+                                                ) {
+                                                    await weapons.update(
+                                                        characterEquipment[j].itemHash,
+                                                        (weapon: {
+                                                            owned: boolean;
+                                                            equipped: number;
+                                                            instanceIds: string[][];
+                                                        }) => {
+                                                            weapon.owned = true;
+                                                            weapon.equipped = classType;
+                                                            weapon.instanceIds[2].push(
+                                                                characterEquipment[j].itemInstanceId
+                                                            );
+
+                                                            const itemHash = characterEquipment[j].bucketHash;
+                                                            charEquipped[
+                                                                itemHash === kinetic_hash
+                                                                    ? 0
+                                                                    : itemHash === energy_hash
+                                                                    ? 1
+                                                                    : 2
+                                                            ] = characterEquipment[j].itemInstanceId;
+                                                        }
+                                                    );
+                                                } else if (
+                                                    characterEquipment[j].bucketHash === helmet_hash ||
+                                                    characterEquipment[j].bucketHash === gauntlets_hash ||
+                                                    characterEquipment[j].bucketHash === chest_hash ||
+                                                    characterEquipment[j].bucketHash === boots_hash
+                                                ) {
+                                                    await armourTable.update(
+                                                        characterEquipment[j].itemHash,
+                                                        (armour: {
+                                                            owned: boolean;
+                                                            equipped: number;
+                                                            instanceIds: string[][];
+                                                        }) => {
+                                                            armour.owned = true;
+                                                            armour.equipped = classType;
+                                                            armour.instanceIds[2].push(
+                                                                characterEquipment[j].itemInstanceId
+                                                            );
+
+                                                            const itemHash = characterEquipment[j].bucketHash;
+                                                            charEquipped[
+                                                                itemHash === helmet_hash
+                                                                    ? 3
+                                                                    : itemHash === gauntlets_hash
+                                                                    ? 4
+                                                                    : itemHash === chest_hash
+                                                                    ? 5
+                                                                    : 6
+                                                            ] = characterEquipment[j].itemInstanceId;
+                                                        }
+                                                    );
+                                                } else if (characterEquipment[j].bucketHash === subclassHash) {
+                                                    await subclasses.update(characterEquipment[j].itemHash, {
+                                                        equipped: classType,
+                                                    });
+                                                }
+                                            }
+
+                                            localStorage.setItem(classType + "_equipped", JSON.stringify(charEquipped));
+                                        }
+                                    });
+                            });
+                    });
+            });
+        }
+    }, []);
 
     return (
         <div className="h-screen w-screen bg-gray-700">
