@@ -1,4 +1,5 @@
 import Tooltip from "./Tooltip";
+import { Class } from "../utils/Enums";
 
 interface ClassRadioProps {
     selected: number;
@@ -7,10 +8,6 @@ interface ClassRadioProps {
 }
 
 const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => {
-    const TITAN: number = 0;
-    const HUNTER: number = 1;
-    const WARLOCK: number = 2;
-
     const logged = localStorage.getItem("access_token") ? true : false;
 
     let disableTitan = false;
@@ -18,13 +15,13 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
     let disableWarlock = false;
 
     if (logged) {
-        if (!localStorage.getItem("character_" + TITAN)) {
+        if (!localStorage.getItem("character_" + Class.TITAN)) {
             disableTitan = true;
         }
-        if (!localStorage.getItem("character_" + HUNTER)) {
+        if (!localStorage.getItem("character_" + Class.HUNTER)) {
             disableHunter = true;
         }
-        if (!localStorage.getItem("character_" + WARLOCK)) {
+        if (!localStorage.getItem("character_" + Class.WARLOCK)) {
             disableWarlock = true;
         }
     }
@@ -36,15 +33,15 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                     className="peer absolute h-0 w-0"
                     type="radio"
                     name="class-radio"
-                    onChange={() => handleChange(TITAN)}
+                    onChange={() => handleChange(Class.TITAN)}
                     disabled={disableAll || disableTitan}
-                    checked={selected === TITAN}
+                    checked={selected === Class.TITAN}
                 />
                 <svg
                     className={
                         "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-95 peer-active:opacity-100" +
                         " peer-disabled:" +
-                        (selected === TITAN ? "opacity-90" : "opacity-20")
+                        (selected === Class.TITAN ? "opacity-90" : "opacity-20")
                     }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
@@ -59,16 +56,16 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                     className="peer absolute w-0"
                     type="radio"
                     name="class-radio"
-                    onChange={() => handleChange(HUNTER)}
+                    onChange={() => handleChange(Class.HUNTER)}
                     defaultChecked
                     disabled={disableAll || disableHunter}
-                    checked={selected === HUNTER}
+                    checked={selected === Class.HUNTER}
                 />
                 <svg
                     className={
                         "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-95 peer-active:opacity-100" +
                         " peer-disabled:" +
-                        (selected === HUNTER ? "opacity-90" : "opacity-20")
+                        (selected === Class.HUNTER ? "opacity-90" : "opacity-20")
                     }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
@@ -83,15 +80,15 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                     className="peer absolute w-0"
                     type="radio"
                     name="class-radio"
-                    onChange={() => handleChange(WARLOCK)}
+                    onChange={() => handleChange(Class.WARLOCK)}
                     disabled={disableAll || disableWarlock}
-                    checked={selected === WARLOCK}
+                    checked={selected === Class.WARLOCK}
                 />
                 <svg
                     className={
                         "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-95 peer-active:opacity-100" +
                         " peer-disabled:" +
-                        (selected === WARLOCK ? "opacity-90" : "opacity-20")
+                        (selected === Class.WARLOCK ? "opacity-90" : "opacity-20")
                     }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"

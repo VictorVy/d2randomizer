@@ -65,8 +65,8 @@ const Randomizer = () => {
 
     const slotInstanceIds: any[] = [...tmpSlotItems];
 
-    let [selectedClass, setSelectedClass] = useState(1);
-    let [selectedSubclass, setSelectedSubclass] = useState(0);
+    let [selectedClass, setSelectedClass] = useState(Class.HUNTER);
+    let [selectedSubclass, setSelectedSubclass] = useState(Element.SOLAR);
 
     let [classLocked, setClassLocked] = useState(true);
     let [subclassLocked, setSubclassLocked] = useState(false);

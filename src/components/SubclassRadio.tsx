@@ -1,6 +1,7 @@
 import Dexie from "dexie";
 import Tooltip from "./Tooltip";
 import { useLiveQuery } from "dexie-react-hooks";
+import { Class, Element } from "../utils/Enums";
 
 interface SubclassRadioProps {
     selectedClass: number;
@@ -19,34 +20,28 @@ db.version(1).stores({
 
 const subclasses = db.table("subclasses");
 
-const SOLAR = 0;
-const ARC = 1;
-const VOID = 2;
-const STASIS = 3;
-const STRAND = 4;
-
 const parseSubclassBuildName = (buildName: string) => {
     const element: string = buildName.split("_")[0];
 
     switch (element) {
         case "thermal":
-            return SOLAR;
+            return Element.SOLAR;
         case "arc":
-            return ARC;
+            return Element.ARC;
         case "void":
-            return VOID;
+            return Element.VOID;
         case "stasis":
-            return STASIS;
+            return Element.STASIS;
         default:
-            return STRAND;
+            return Element.STRAND;
     }
 };
 
 function classInterpreter(num: number) {
     switch (num) {
-        case 0:
+        case Class.TITAN:
             return "titan";
-        case 1:
+        case Class.HUNTER:
             return "hunter";
         default:
             return "warlock";
@@ -73,10 +68,10 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
                     className="peer absolute h-0 w-0"
                     type="radio"
                     name="subclass-radio"
-                    onChange={() => handleChange(SOLAR)}
+                    onChange={() => handleChange(Element.SOLAR)}
                     defaultChecked
-                    checked={selectedSubclass === SOLAR}
-                    disabled={disableSubclass[SOLAR]}
+                    checked={selectedSubclass === Element.SOLAR}
+                    disabled={disableSubclass[Element.SOLAR]}
                 />
                 <img
                     className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-60 duration-75 peer-checked:opacity-95 peer-hover:opacity-95 peer-active:opacity-100 peer-disabled:opacity-10"
@@ -89,10 +84,10 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
                     className="peer absolute w-0"
                     type="radio"
                     name="subclass-radio"
-                    onChange={() => handleChange(ARC)}
+                    onChange={() => handleChange(Element.ARC)}
                     defaultChecked
-                    checked={selectedSubclass === ARC}
-                    disabled={disableSubclass[ARC]}
+                    checked={selectedSubclass === Element.ARC}
+                    disabled={disableSubclass[Element.ARC]}
                 />
                 <img
                     className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-60 duration-75 peer-checked:opacity-95 peer-hover:opacity-95 peer-active:opacity-100 peer-disabled:opacity-10"
@@ -105,10 +100,10 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
                     className="peer absolute w-0"
                     type="radio"
                     name="subclass-radio"
-                    onChange={() => handleChange(VOID)}
+                    onChange={() => handleChange(Element.VOID)}
                     defaultChecked
-                    checked={selectedSubclass === VOID}
-                    disabled={disableSubclass[VOID]}
+                    checked={selectedSubclass === Element.VOID}
+                    disabled={disableSubclass[Element.VOID]}
                 />
                 <img
                     className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-60 duration-75 peer-checked:opacity-95 peer-hover:opacity-95 peer-active:opacity-100 peer-disabled:opacity-10"
@@ -121,10 +116,10 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
                     className="peer absolute w-0"
                     type="radio"
                     name="subclass-radio"
-                    onChange={() => handleChange(STASIS)}
+                    onChange={() => handleChange(Element.STASIS)}
                     defaultChecked
-                    checked={selectedSubclass === STASIS}
-                    disabled={disableSubclass[STASIS]}
+                    checked={selectedSubclass === Element.STASIS}
+                    disabled={disableSubclass[Element.STASIS]}
                 />
                 <img
                     className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-60 duration-75 peer-checked:opacity-95 peer-hover:opacity-95 peer-active:opacity-100 peer-disabled:opacity-10"
@@ -137,10 +132,10 @@ const SubclassRadio = ({ selectedClass, selectedSubclass, handleChange }: Subcla
                     className="peer absolute w-0"
                     type="radio"
                     name="subclass-radio"
-                    onChange={() => handleChange(STRAND)}
+                    onChange={() => handleChange(Element.STRAND)}
                     defaultChecked
-                    checked={selectedSubclass === STRAND}
-                    disabled={disableSubclass[STRAND]}
+                    checked={selectedSubclass === Element.STRAND}
+                    disabled={disableSubclass[Element.STRAND]}
                 />
                 <img
                     className="w-10 cursor-pointer rounded bg-black bg-opacity-25 opacity-60 duration-75 peer-checked:opacity-95 peer-hover:opacity-95 peer-active:opacity-100 peer-disabled:opacity-10"
