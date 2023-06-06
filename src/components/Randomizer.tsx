@@ -291,7 +291,7 @@ const Randomizer = () => {
             const userSubclasses = await subclasses
                 .where("class_type")
                 .equals(randClass)
-                .and((subclass) => subclass.inInv !== -1)
+                .and((subclass) => subclass.inInv !== -1 || subclass.equipped !== -1)
                 .toArray();
 
             randSubclass = parseSubclassBuildName(
