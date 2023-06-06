@@ -522,17 +522,25 @@ const Home = () => {
     }
 
     useEffect(() => {
+        let canceled = false;
+
         if (localStorage.getItem("access_token")) {
             clearDB().then(() => {
-                const bungieMembershipId = localStorage.getItem("bungie_membership_id")!;
+                if (!canceled) {
+                    const bungieMembershipId = localStorage.getItem("bungie_membership_id")!;
 
-                fetchDisplayName(bungieMembershipId).then((fullDisplayName) =>
-                    fetchD2MembershipId(fullDisplayName).then(({ d2MembershipId, d2MembershipType }) =>
-                        fetchProfile(d2MembershipId, d2MembershipType).then((profile) => parseProfile(profile))
-                    )
-                );
+                    fetchDisplayName(bungieMembershipId).then((fullDisplayName) =>
+                        fetchD2MembershipId(fullDisplayName).then(({ d2MembershipId, d2MembershipType }) =>
+                            fetchProfile(d2MembershipId, d2MembershipType).then((profile) => parseProfile(profile))
+                        )
+                    );
+                }
             });
         }
+
+        return () => {
+            canceled = true;
+        };
     }, []);
 
     return (
