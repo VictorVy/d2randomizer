@@ -10,3 +10,11 @@ export enum Location {
     INVENTORY = 1,
     EQUIPPED = 2,
 }
+
+export enum Element {
+    SOLAR = 0,
+    ARC = 1,
+    VOID = 2,
+    STASIS = 3,
+    STRAND = 4,
+}

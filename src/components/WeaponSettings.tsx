@@ -1,34 +1,54 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Toggle from "./Toggle";
+
+function setCommons(b: boolean) {
+    localStorage.setItem("weapon_commons", b.toString());
+}
+function setUncommons(b: boolean) {
+    localStorage.setItem("weapon_uncommons", b.toString());
+}
+function setRares(b: boolean) {
+    localStorage.setItem("weapon_rares", b.toString());
+}
+function setLegendaries(b: boolean) {
+    localStorage.setItem("weapon_legendaries", b.toString());
+}
+function setEnsureExotics(b: boolean) {
+    localStorage.setItem("weapon_ensure_exotics", b.toString());
+}
+
+function setInVault(b: boolean) {
+    localStorage.setItem("weapon_in_vault", b.toString());
+}
+function setInInventory(b: boolean) {
+    localStorage.setItem("weapon_in_inventory", b.toString());
+}
+function setEquipped(b: boolean) {
+    localStorage.setItem("weapon_equipped", b.toString());
+}
+
+localStorage.setItem("weapon_commons", "false");
+localStorage.setItem("weapon_uncommons", "false");
+localStorage.setItem("weapon_rares", "false");
+localStorage.setItem("weapon_legendaries", "true");
+localStorage.setItem("weapon_exotics", "true");
+localStorage.setItem("weapon_ensure_exotics", "true");
+
+localStorage.setItem("weapon_in_vault", "true");
+localStorage.setItem("weapon_in_inventory", "true");
+localStorage.setItem("weapon_equipped", "true");
 
 const WeaponSettings = () => {
     const logged = localStorage.getItem("access_token") !== null;
 
     let [drop, setDrop] = useState(false);
 
-    let [commons, setCommons] = useState(false);
-    let [uncommons, setUncommons] = useState(false);
-    let [rares, setRares] = useState(false);
-    let [legendaries, setLegendaries] = useState(true);
-    let [exotics, setExotics] = useState(true);
-    let [ensureExotics, setEnsureExotics] = useState(true);
+    let [exoticsEnabled, setExoticsEnabled] = useState(true);
 
-    let [inVault, setInVault] = useState(logged);
-    let [inInventory, setInInventory] = useState(logged);
-    let [equipped, setEquipped] = useState(logged);
-
-    useEffect(() => {
-        localStorage.setItem("weapon_commons", commons.toString());
-        localStorage.setItem("weapon_uncommons", uncommons.toString());
-        localStorage.setItem("weapon_rares", rares.toString());
-        localStorage.setItem("weapon_legendaries", legendaries.toString());
-        localStorage.setItem("weapon_exotics", exotics.toString());
-        localStorage.setItem("weapon_ensure_exotics", ensureExotics.toString());
-
-        localStorage.setItem("weapon_in_vault", inVault.toString());
-        localStorage.setItem("weapon_in_inventory", inInventory.toString());
-        localStorage.setItem("weapon_equipped", equipped.toString());
-    }, [commons, uncommons, rares, legendaries, exotics, ensureExotics, inVault, inInventory, equipped]);
+    function setExotics(b: boolean) {
+        localStorage.setItem("weapon_exotics", b.toString());
+        setExoticsEnabled(b);
+    }
 
     return (
         <div className="flex flex-col items-end space-y-2">
@@ -82,7 +102,7 @@ const WeaponSettings = () => {
                         text="Ensure exotic"
                         forWeapons={true}
                         onChange={setEnsureExotics}
-                        disabled={!exotics}
+                        disabled={!exoticsEnabled}
                         defaultCheck={true}
                     />
                 </div>

@@ -1,34 +1,54 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Toggle from "./Toggle";
+
+function setCommons(b: boolean) {
+    localStorage.setItem("armour_commons", b.toString());
+}
+function setUncommons(b: boolean) {
+    localStorage.setItem("armour_uncommons", b.toString());
+}
+function setRares(b: boolean) {
+    localStorage.setItem("armour_rares", b.toString());
+}
+function setLegendaries(b: boolean) {
+    localStorage.setItem("armour_legendaries", b.toString());
+}
+function setEnsureExotics(b: boolean) {
+    localStorage.setItem("armour_ensure_exotics", b.toString());
+}
+
+function setInVault(b: boolean) {
+    localStorage.setItem("armour_in_vault", b.toString());
+}
+function setInInventory(b: boolean) {
+    localStorage.setItem("armour_in_inventory", b.toString());
+}
+function setEquipped(b: boolean) {
+    localStorage.setItem("armour_equipped", b.toString());
+}
+
+localStorage.setItem("armour_commons", "false");
+localStorage.setItem("armour_uncommons", "false");
+localStorage.setItem("armour_rares", "false");
+localStorage.setItem("armour_legendaries", "true");
+localStorage.setItem("armour_exotics", "true");
+localStorage.setItem("armour_ensure_exotics", "true");
+
+localStorage.setItem("armour_in_vault", "true");
+localStorage.setItem("armour_in_inventory", "true");
+localStorage.setItem("armour_equipped", "true");
 
 const ArmourSettings = () => {
     const logged = localStorage.getItem("access_token") !== null;
 
     let [drop, setDrop] = useState(false);
 
-    let [commons, setCommons] = useState(false);
-    let [uncommons, setUncommons] = useState(false);
-    let [rares, setRares] = useState(false);
-    let [legendaries, setLegendaries] = useState(true);
-    let [exotics, setExotics] = useState(true);
-    let [ensureExotics, setEnsureExotics] = useState(true);
+    let [exoticsEnabled, setExoticsEnabled] = useState(true);
 
-    let [inVault, setInVault] = useState(logged);
-    let [inInventory, setInInventory] = useState(logged);
-    let [equipped, setEquipped] = useState(logged);
-
-    useEffect(() => {
-        localStorage.setItem("armour_commons", commons.toString());
-        localStorage.setItem("armour_uncommons", uncommons.toString());
-        localStorage.setItem("armour_rares", rares.toString());
-        localStorage.setItem("armour_legendaries", legendaries.toString());
-        localStorage.setItem("armour_exotics", exotics.toString());
-        localStorage.setItem("armour_ensure_exotics", ensureExotics.toString());
-
-        localStorage.setItem("armour_in_vault", inVault.toString());
-        localStorage.setItem("armour_in_inventory", inInventory.toString());
-        localStorage.setItem("armour_equipped", equipped.toString());
-    }, [commons, uncommons, rares, legendaries, exotics, ensureExotics, inVault, inInventory, equipped]);
+    function setExotics(b: boolean) {
+        localStorage.setItem("armour_exotics", b.toString());
+        setExoticsEnabled(b);
+    }
 
     return (
         <div className="flex flex-col space-y-2">
@@ -55,7 +75,12 @@ const ArmourSettings = () => {
                     <Toggle text="Rares" onChange={setRares} />
                     <Toggle text="Legendaries" onChange={setLegendaries} defaultCheck={true} />
                     <Toggle text="Exotics" onChange={setExotics} defaultCheck={true} />
-                    <Toggle text="Ensure exotic" onChange={setEnsureExotics} disabled={!exotics} defaultCheck={true} />
+                    <Toggle
+                        text="Ensure exotic"
+                        onChange={setEnsureExotics}
+                        disabled={!exoticsEnabled}
+                        defaultCheck={true}
+                    />
                 </div>
                 <div className="space-y-3">
                     <Toggle text="Vault" onChange={setInVault} defaultCheck={logged} disabled={!logged} />

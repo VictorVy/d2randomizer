@@ -22,7 +22,11 @@ const subclasses = db.table("subclasses");
 
 const apiKey: string = import.meta.env.VITE_API_KEY;
 
-const addWeapon = (
+function getArmourTable(c: number) {
+    return c === Class.TITAN ? titan_armour : c === Class.HUNTER ? hunter_armour : warlock_armour;
+}
+
+function addWeapon(
     hash: number,
     name: string,
     type: string,
@@ -37,7 +41,7 @@ const addWeapon = (
     inInv: number,
     equipped: number,
     instanceIds: string[][]
-) => {
+) {
     weapons.put({
         hash: hash,
         name: name,
@@ -54,9 +58,9 @@ const addWeapon = (
         equipped: equipped,
         instanceIds: instanceIds,
     });
-};
+}
 
-const addArmour = (
+function addArmour(
     hash: number,
     name: string,
     type: string,
@@ -69,11 +73,8 @@ const addArmour = (
     inInv: number,
     equipped: number,
     instanceIds: string[][]
-) => {
-    const armour_table: Dexie.Table<any, IndexableType> =
-        class_type === Class.TITAN ? titan_armour : class_type === Class.HUNTER ? hunter_armour : warlock_armour;
-
-    armour_table.put({
+) {
+    getArmourTable(class_type).put({
         hash: hash,
         name: name,
         type: type,
@@ -87,9 +88,9 @@ const addArmour = (
         equipped: equipped,
         instanceIds: instanceIds,
     });
-};
+}
 
-const addSubclass = async (
+function addSubclass(
     hash: number,
     name: string,
     buildName: string,
@@ -97,8 +98,8 @@ const addSubclass = async (
     icon: string,
     inInv: number,
     equipped: number
-) => {
-    await subclasses.put({
+) {
+    subclasses.put({
         hash: hash,
         name: name,
         buildName: buildName,
@@ -107,9 +108,9 @@ const addSubclass = async (
         inInv: inInv,
         equipped: equipped,
     });
-};
+}
 
-const onLogout = () => {
+function onLogout() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("bungie_membership_id");
@@ -126,7 +127,7 @@ const onLogout = () => {
     localStorage.removeItem(Class.WARLOCK + "_equipped");
 
     clearDB().then(() => window.location.reload());
-};
+}
 
 function clearDB() {
     return new Promise((resolve) => {
@@ -151,7 +152,7 @@ function clearItems(table: Table<any, IndexableType>) {
     });
 }
 
-const formatCode = (code: string) => {
+function formatCode(code: string) {
     if (code.length === 0) {
         return "0000";
     } else if (code.length === 1) {
@@ -163,7 +164,7 @@ const formatCode = (code: string) => {
     } else {
         return code;
     }
-};
+}
 
 function fetchManifest() {
     return new Promise((resolve) => {
@@ -433,8 +434,7 @@ async function parseProfile(profile: any) {
         const classType = profile.characters.data[characterIds[i]].classType;
         localStorage.setItem("character_" + classType, characterIds[i]);
 
-        const armourTable =
-            classType === Class.TITAN ? titan_armour : classType === Class.HUNTER ? hunter_armour : warlock_armour;
+        const armourTable = getArmourTable(classType);
 
         const characterInventory = profile.characterInventories.data[characterIds[i]].items;
 
