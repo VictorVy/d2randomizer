@@ -187,7 +187,7 @@ const Randomizer = () => {
         rarities: boolean[],
         buckets: boolean[]
     ) {
-        return new Promise((resolve) => {
+        return new Promise<any>((resolve) => {
             table
                 .where("slot")
                 .equals(slotHash)
@@ -297,51 +297,63 @@ const Randomizer = () => {
 
         tmpSlotItems = [...slotItems];
 
+        const tasks: Promise<void>[] = [];
+
         if (lockedWeaponExoticSlot === -1 && weaponRarities.at(-1)) {
             const unlockedSlots = [0, 1, 2].filter((slot) => !slotsLocked[slot]);
             exoticWeaponSlot = unlockedSlots[Math.floor(Math.random() * unlockedSlots.length)];
-            tmpSlotItems[exoticWeaponSlot] = await chooseItem(
-                weapons,
-                selClass,
-                SLOT_HASHES[exoticWeaponSlot],
-                ensureWeaponExotic ? [false, false, false, false, true] : weaponRarities,
-                weaponBuckets
+            tasks.push(
+                chooseItem(
+                    weapons,
+                    selClass,
+                    SLOT_HASHES[exoticWeaponSlot],
+                    ensureWeaponExotic ? [false, false, false, false, true] : weaponRarities,
+                    weaponBuckets
+                ).then((exoticWeapon) => (tmpSlotItems[exoticWeaponSlot] = exoticWeapon))
             );
         }
         if (lockedArmourExoticSlot === -1 && armourRarities.at(-1)) {
             const unlockedSlots = [3, 4, 5, 6].filter((slot) => !slotsLocked[slot]);
             exoticArmourSlot = unlockedSlots[Math.floor(Math.random() * unlockedSlots.length)];
-            tmpSlotItems[exoticArmourSlot] = await chooseItem(
-                getArmourTable(selClass),
-                selClass,
-                SLOT_HASHES[exoticArmourSlot],
-                ensureArmourExotic ? [false, false, false, false, true] : armourRarities,
-                armourBuckets
+            tasks.push(
+                chooseItem(
+                    getArmourTable(selClass),
+                    selClass,
+                    SLOT_HASHES[exoticArmourSlot],
+                    ensureArmourExotic ? [false, false, false, false, true] : armourRarities,
+                    armourBuckets
+                ).then((exoticArmour) => (tmpSlotItems[exoticArmourSlot] = exoticArmour))
             );
         }
 
         for (let i = 0; i < 3; i++) {
             if (i !== exoticWeaponSlot && !slotsLocked[i]) {
-                tmpSlotItems[i] = await chooseItem(
-                    weapons,
-                    selClass,
-                    SLOT_HASHES[i],
-                    [...weaponRarities.slice(0, -1), false],
-                    weaponBuckets
+                tasks.push(
+                    chooseItem(
+                        weapons,
+                        selClass,
+                        SLOT_HASHES[i],
+                        [...weaponRarities.slice(0, -1), false],
+                        weaponBuckets
+                    ).then((weapon) => (tmpSlotItems[i] = weapon))
                 );
             }
         }
         for (let i = 3; i < 7; i++) {
             if (i !== exoticArmourSlot && !slotsLocked[i]) {
-                tmpSlotItems[i] = await chooseItem(
-                    getArmourTable(selClass),
-                    selClass,
-                    SLOT_HASHES[i],
-                    [...armourRarities.slice(0, -1), false],
-                    armourBuckets
+                tasks.push(
+                    chooseItem(
+                        getArmourTable(selClass),
+                        selClass,
+                        SLOT_HASHES[i],
+                        [...armourRarities.slice(0, -1), false],
+                        armourBuckets
+                    ).then((armour) => (tmpSlotItems[i] = armour))
                 );
             }
         }
+
+        await Promise.all(tasks);
     }
 
     function importItems() {
