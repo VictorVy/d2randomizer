@@ -20,6 +20,8 @@ const hunter_armour = db.table("hunter_armour");
 const warlock_armour = db.table("warlock_armour");
 const subclasses = db.table("subclasses");
 
+const allTables = [weapons, titan_armour, hunter_armour, warlock_armour, subclasses];
+
 const apiKey: string = import.meta.env.VITE_API_KEY;
 
 function getArmourTable(c: number) {
@@ -208,9 +210,11 @@ function parseManifest(manifest: any, capHashes: number[]) {
 
             let keys = Object.keys(data.DestinyInventoryItemDefinition);
 
-            for (let i = 0; i < keys.length; i++) {
-                addItemToDB(data.DestinyInventoryItemDefinition[keys[i]], nonSunset);
-            }
+            db.transaction("rw", allTables, () => {
+                for (let i = 0; i < keys.length; i++) {
+                    addItemToDB(data.DestinyInventoryItemDefinition[keys[i]], nonSunset);
+                }
+            });
 
             keys = Object.keys(data.DestinyEquipmentSlotDefinition);
 
@@ -405,23 +409,25 @@ async function parseProfile(profile: any) {
 
     let items = profile.profileInventory.data.items;
 
-    for (let i = 0; i < items.length; i++) {
-        if (items[i].bucketHash === vaultHash) {
-            let updated = await flagVaultItem(weapons, items[i]);
-
-            if (!updated) {
-                updated = await flagVaultItem(titan_armour, items[i]);
+    db.transaction("rw", allTables.slice(0, -1), async () => {
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].bucketHash === vaultHash) {
+                let updated = await flagVaultItem(weapons, items[i]);
 
                 if (!updated) {
-                    updated = await flagVaultItem(hunter_armour, items[i]);
+                    updated = await flagVaultItem(titan_armour, items[i]);
 
                     if (!updated) {
-                        flagVaultItem(warlock_armour, items[i]);
+                        updated = await flagVaultItem(hunter_armour, items[i]);
+
+                        if (!updated) {
+                            flagVaultItem(warlock_armour, items[i]);
+                        }
                     }
                 }
             }
         }
-    }
+    });
 
     const characterIds: string[] = Object.keys(profile.characters.data);
 
@@ -472,38 +478,26 @@ async function parseProfile(profile: any) {
 }
 
 function flagVaultItem(table: Table<any, IndexableType>, item: any) {
-    return new Promise((resolve) => {
-        table
-            .update(item.itemHash, (i: { owned: boolean; inVault: boolean; instanceIds: string[][] }) => {
-                i.owned = true;
-                i.inVault = true;
-                i.instanceIds[Location.VAULT].push(item.itemInstanceId);
-            })
-            .then((updated) => resolve(updated));
+    return table.update(item.itemHash, (i: { owned: boolean; inVault: boolean; instanceIds: string[][] }) => {
+        i.owned = true;
+        i.inVault = true;
+        i.instanceIds[Location.VAULT].push(item.itemInstanceId);
     });
 }
 
 function flagInventoryItem(table: Table<any, IndexableType>, item: any, classType: number) {
-    return new Promise((resolve) => {
-        table
-            .update(item.itemHash, (i: { owned: boolean; inInv: number; instanceIds: string[][] }) => {
-                i.owned = true;
-                i.inInv = classType;
-                i.instanceIds[Location.INVENTORY].push(item.itemInstanceId);
-            })
-            .then((updated) => resolve(updated));
+    return table.update(item.itemHash, (i: { owned: boolean; inInv: number; instanceIds: string[][] }) => {
+        i.owned = true;
+        i.inInv = classType;
+        i.instanceIds[Location.INVENTORY].push(item.itemInstanceId);
     });
 }
 
 function flagEquippedItem(table: Table<any, IndexableType>, item: any, classType: number) {
-    return new Promise((resolve) => {
-        table
-            .update(item.itemHash, (i: { owned: boolean; equipped: number; instanceIds: string[][] }) => {
-                i.owned = true;
-                i.equipped = classType;
-                i.instanceIds[Location.EQUIPPED].push(item.itemInstanceId);
-            })
-            .then((updated) => resolve(updated));
+    return table.update(item.itemHash, (i: { owned: boolean; equipped: number; instanceIds: string[][] }) => {
+        i.owned = true;
+        i.equipped = classType;
+        i.instanceIds[Location.EQUIPPED].push(item.itemInstanceId);
     });
 }
 
