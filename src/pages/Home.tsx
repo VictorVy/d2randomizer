@@ -130,26 +130,21 @@ function onLogout() {
 }
 
 function clearDB() {
-    return new Promise((resolve) => {
-        const tasks: Promise<any>[] = [];
+    const tasks: Promise<any>[] = [];
 
-        tasks.push(clearItems(weapons));
-        tasks.push(clearItems(titan_armour));
-        tasks.push(clearItems(hunter_armour));
-        tasks.push(clearItems(warlock_armour));
-        tasks.push(subclasses.filter((subclass) => subclass.inInv !== -1).modify({ inInv: -1, equipped: -1 }));
+    tasks.push(clearItems(weapons));
+    tasks.push(clearItems(titan_armour));
+    tasks.push(clearItems(hunter_armour));
+    tasks.push(clearItems(warlock_armour));
+    tasks.push(subclasses.filter((subclass) => subclass.inInv !== -1).modify({ inInv: -1, equipped: -1 }));
 
-        Promise.all(tasks).then(resolve);
-    });
+    return Promise.all(tasks);
 }
 
 function clearItems(table: Table<any, IndexableType>) {
-    return new Promise((resolve) => {
-        table
-            .filter((item) => item.owned)
-            .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] })
-            .then(resolve);
-    });
+    return table
+        .filter((item) => item.owned)
+        .modify({ inVault: false, inInv: -1, equipped: -1, instanceIds: [[], [], []] });
 }
 
 function formatCode(code: string) {
