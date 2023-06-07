@@ -27,6 +27,54 @@ function getArmourTable(c: number) {
     return c === Class.TITAN ? titan_armour : c === Class.HUNTER ? hunter_armour : warlock_armour;
 }
 
+function chooseItem(
+    table: Table<any, IndexableType>,
+    selClass: number,
+    slotHash: number,
+    rarities: boolean[],
+    buckets: boolean[],
+    logged: boolean
+) {
+    return new Promise<any>((resolve) => {
+        table
+            .where("slot")
+            .equals(slotHash)
+            .and(
+                (item) =>
+                    !logged ||
+                    (item.owned &&
+                        ((buckets[0] ? item.inVault : false) ||
+                            (buckets[1] ? item.inInv !== -1 : false) ||
+                            (buckets[2] ? item.equipped !== -1 : false)))
+            )
+            .and(
+                (item) =>
+                    (rarities[0] && item.tier === "Common") ||
+                    (rarities[1] && item.tier === "Uncommon") ||
+                    (rarities[2] && item.tier === "Rare") ||
+                    (rarities[3] && item.tier === "Legendary") ||
+                    (rarities[4] && item.tier === "Exotic")
+            )
+            .and((item) => item.class_type === selClass || item.class_type === 3)
+            .toArray()
+            .then((filteredItems) => {
+                if (filteredItems.length === 0) {
+                    resolve(undefined);
+                } else {
+                    const randomIndex = Math.floor(Math.random() * filteredItems.length);
+                    const chosenItem = filteredItems[randomIndex];
+
+                    resolve(chosenItem);
+                }
+            });
+    });
+}
+
+const apiKey = import.meta.env.VITE_API_KEY;
+
+let tmpSlotItems: any[] = [undefined, undefined, undefined, undefined, undefined, undefined, undefined];
+const slotInstanceIds: any[] = [...tmpSlotItems];
+
 function parseSubclassBuildName(buildName: string) {
     const element: string = buildName.split("_")[0];
 
@@ -83,11 +131,41 @@ function getRandomInstanceId(item: any, locationsAllowed: boolean[]) {
     }
 }
 
+function randomizeClass(logged: boolean) {
+    if (logged) {
+        const userClasses = [];
+
+        for (let i = 0; i < 3; i++) {
+            if (localStorage.getItem(`character_${i}`)) {
+                userClasses.push(i);
+            }
+        }
+
+        return userClasses[Math.floor(Math.random() * userClasses.length)];
+    } else {
+        return Math.floor(Math.random() * 3);
+    }
+}
+
+async function randomizeSubclass(randomClass: number, logged: boolean) {
+    if (logged) {
+        const userSubclasses = await subclasses
+            .where("class_type")
+            .equals(randomClass)
+            .and((subclass) => subclass.inInv !== -1 || subclass.equipped !== -1)
+            .toArray();
+
+        return parseSubclassBuildName(userSubclasses[Math.floor(Math.random() * userSubclasses.length)].buildName);
+    } else {
+        return Math.floor(Math.random() * 5);
+    }
+}
+
 const Randomizer = () => {
     const logged: boolean = localStorage.getItem("access_token") ? true : false;
-    let accessToken: string = logged ? localStorage.getItem("access_token")! : "";
+    const accessToken: string = logged ? localStorage.getItem("access_token")! : "";
 
-    const apiKey = import.meta.env.VITE_API_KEY;
+    const [slotItems, setSlotItems] = useState(tmpSlotItems);
 
     const SLOT_HASHES: number[] = [
         parseInt(localStorage.getItem("kinetic_hash")!),
@@ -98,11 +176,6 @@ const Randomizer = () => {
         parseInt(localStorage.getItem("chest_hash")!),
         parseInt(localStorage.getItem("boots_hash")!),
     ];
-
-    let tmpSlotItems: any[] = [undefined, undefined, undefined, undefined, undefined, undefined, undefined];
-    const [slotItems, setSlotItems] = useState(tmpSlotItems);
-
-    const slotInstanceIds: any[] = [...tmpSlotItems];
 
     let [selectedClass, setSelectedClass] = useState(Class.HUNTER);
     let [selectedSubclass, setSelectedSubclass] = useState(Element.SOLAR);
@@ -138,7 +211,6 @@ const Randomizer = () => {
         setLockedArmourExoticSlot(exoticSlots[1] !== -1 && slotsLocked[exoticSlots[1]] ? exoticSlots[1] : -1);
     }, [slotsLocked]);
 
-    // randomize instance ids
     useEffect(() => {
         if (logged) {
             const weaponsInVault: boolean = localStorage.getItem("weapon_in_vault") === "true" ? true : false;
@@ -158,88 +230,25 @@ const Randomizer = () => {
         }
     }, [slotItems]);
 
-    function chooseItem(
-        table: Table<any, IndexableType>,
-        selClass: number,
-        slotHash: number,
-        rarities: boolean[],
-        buckets: boolean[]
-    ) {
-        return new Promise<any>((resolve) => {
-            table
-                .where("slot")
-                .equals(slotHash)
-                .and(
-                    (item) =>
-                        !logged ||
-                        (item.owned &&
-                            ((buckets[0] ? item.inVault : false) ||
-                                (buckets[1] ? item.inInv !== -1 : false) ||
-                                (buckets[2] ? item.equipped !== -1 : false)))
-                )
-                .and(
-                    (item) =>
-                        (rarities[0] && item.tier === "Common") ||
-                        (rarities[1] && item.tier === "Uncommon") ||
-                        (rarities[2] && item.tier === "Rare") ||
-                        (rarities[3] && item.tier === "Legendary") ||
-                        (rarities[4] && item.tier === "Exotic")
-                )
-                .and((item) => item.class_type === selClass || item.class_type === 3)
-                .toArray()
-                .then((filteredItems) => {
-                    if (filteredItems.length === 0) {
-                        resolve(undefined);
-                    } else {
-                        const randomIndex = Math.floor(Math.random() * filteredItems.length);
-                        const chosenItem = filteredItems[randomIndex];
-
-                        resolve(chosenItem);
-                    }
-                });
-        });
+    function flagItemEquipped(item: { equipped: number; inInv: number; instanceIds: string[][] }, instanceId: string) {
+        item.equipped = selectedClass;
+        item.inInv = -1;
+        item.instanceIds = [
+            item.instanceIds[Location.VAULT],
+            item.instanceIds[Location.INVENTORY].filter((iId: string) => iId !== instanceId),
+            [...item.instanceIds[Location.EQUIPPED], instanceId],
+        ];
     }
 
     async function randomize() {
-        const randClass: number = randomizeClass();
-        let randSubclass: number;
+        const randomClass: number = randomizeClass(logged);
 
-        if (logged) {
-            const userSubclasses = await subclasses
-                .where("class_type")
-                .equals(randClass)
-                .and((subclass) => subclass.inInv !== -1 || subclass.equipped !== -1)
-                .toArray();
+        setSelectedClass(classLocked || disableClassLock ? selectedClass : randomClass);
+        setSelectedSubclass(subclassLocked ? selectedSubclass : await randomizeSubclass(randomClass, logged));
 
-            randSubclass = parseSubclassBuildName(
-                userSubclasses[Math.floor(Math.random() * userSubclasses.length)].buildName
-            );
-        } else {
-            randSubclass = Math.floor(Math.random() * 5);
-        }
-
-        setSelectedClass(classLocked || disableClassLock ? selectedClass : randClass);
-        setSelectedSubclass(subclassLocked ? selectedSubclass : randSubclass);
-
-        await randomizeItems(classLocked || disableClassLock ? selectedClass : randClass);
+        await randomizeItems(classLocked || disableClassLock ? selectedClass : randomClass);
 
         setSlotItems(tmpSlotItems);
-    }
-
-    function randomizeClass() {
-        if (logged) {
-            const userClasses = [];
-
-            for (let i = 0; i < 3; i++) {
-                if (localStorage.getItem(`character_${i}`)) {
-                    userClasses.push(i);
-                }
-            }
-
-            return userClasses[Math.floor(Math.random() * userClasses.length)];
-        } else {
-            return Math.floor(Math.random() * 3);
-        }
     }
 
     async function randomizeItems(selClass: number) {
@@ -287,7 +296,8 @@ const Randomizer = () => {
                     selClass,
                     SLOT_HASHES[exoticWeaponSlot],
                     ensureWeaponExotic ? [false, false, false, false, true] : weaponRarities,
-                    weaponBuckets
+                    weaponBuckets,
+                    logged
                 ).then((exoticWeapon) => (tmpSlotItems[exoticWeaponSlot] = exoticWeapon))
             );
         }
@@ -300,7 +310,8 @@ const Randomizer = () => {
                     selClass,
                     SLOT_HASHES[exoticArmourSlot],
                     ensureArmourExotic ? [false, false, false, false, true] : armourRarities,
-                    armourBuckets
+                    armourBuckets,
+                    logged
                 ).then((exoticArmour) => (tmpSlotItems[exoticArmourSlot] = exoticArmour))
             );
         }
@@ -313,7 +324,8 @@ const Randomizer = () => {
                         selClass,
                         SLOT_HASHES[i],
                         [...weaponRarities.slice(0, -1), false],
-                        weaponBuckets
+                        weaponBuckets,
+                        logged
                     ).then((weapon) => (tmpSlotItems[i] = weapon))
                 );
             }
@@ -326,7 +338,8 @@ const Randomizer = () => {
                         selClass,
                         SLOT_HASHES[i],
                         [...armourRarities.slice(0, -1), false],
-                        armourBuckets
+                        armourBuckets,
+                        logged
                     ).then((armour) => (tmpSlotItems[i] = armour))
                 );
             }
@@ -403,8 +416,6 @@ const Randomizer = () => {
             .filter((instance, index) => instance !== undefined && !exoticSlots.includes(index))
             .map((instance) => instance.id);
 
-        // console.log(slotInstanceIds, ids);
-
         fetch("https://www.bungie.net/Platform/Destiny2/Actions/Items/EquipItems/", {
             method: "POST",
             headers: {
@@ -429,11 +440,9 @@ const Randomizer = () => {
     }
 
     async function equipExotics(charId: string) {
-        const exoticSlots: number[] = getExoticSlots(slotInstanceIds);
+        const exoticSlots: number[] = getExoticSlots(slotItems);
 
         const ids = [];
-
-        // console.log(slotInstanceIds);
 
         if (exoticSlots[0] !== -1) {
             ids.push(slotInstanceIds[exoticSlots[0]].id);
@@ -531,6 +540,18 @@ const Randomizer = () => {
         const changedSlotHashes = SLOT_HASHES.filter((_, index) => changed[index]);
         const equippedHashes = JSON.parse(localStorage.getItem(selectedClass + "_equipped")!);
 
+        function resetItem(item: { slot: number; equipped: number; inInv: number; instanceIds: string[][] }) {
+            const id: string = equippedHashes[SLOT_HASHES.indexOf(item.slot)];
+
+            item.equipped = -1;
+            item.inInv = selectedClass;
+            item.instanceIds = [
+                item.instanceIds[0],
+                [...item.instanceIds[1], id],
+                item.instanceIds[2].filter((instanceId: string) => instanceId !== id),
+            ];
+        }
+
         let tasks: Promise<any>[] = [];
 
         if (changed[0] || changed[1] || changed[2]) {
@@ -539,17 +560,7 @@ const Randomizer = () => {
                     .where("equipped")
                     .equals(selectedClass)
                     .and((weapon) => changedSlotHashes.includes(weapon.slot))
-                    .modify((weapon: { slot: number; equipped: number; inInv: number; instanceIds: string[][] }) => {
-                        const id: string = equippedHashes[SLOT_HASHES.indexOf(weapon.slot)];
-
-                        weapon.equipped = -1;
-                        weapon.inInv = selectedClass;
-                        weapon.instanceIds = [
-                            weapon.instanceIds[0],
-                            [...weapon.instanceIds[1], id],
-                            weapon.instanceIds[2].filter((instanceId: string) => instanceId !== id),
-                        ];
-                    })
+                    .modify(resetItem)
             );
         }
         if (changed[3] || changed[4] || changed[5] || changed[6]) {
@@ -558,17 +569,7 @@ const Randomizer = () => {
                     .where("equipped")
                     .equals(selectedClass)
                     .and((armour) => changedSlotHashes.includes(armour.slot))
-                    .modify((armour: { slot: number; equipped: number; inInv: number; instanceIds: string[][] }) => {
-                        const id: string = equippedHashes[SLOT_HASHES.indexOf(armour.slot)];
-
-                        armour.equipped = -1;
-                        armour.inInv = selectedClass;
-                        armour.instanceIds = [
-                            armour.instanceIds[0],
-                            [...armour.instanceIds[1], id],
-                            armour.instanceIds[2].filter((instanceId: string) => instanceId !== id),
-                        ];
-                    })
+                    .modify(resetItem)
             );
         }
 
@@ -577,22 +578,17 @@ const Randomizer = () => {
 
             for (let i = 0; i < 3; i++) {
                 if (changed[i]) {
-                    const item = slotItems[i];
+                    const itemHash: number = slotItems[i].hash;
+                    const itemInstanceId: string = slotInstanceIds[i].id;
 
                     tasks.push(
                         weapons
                             .where("hash")
-                            .equals(item.hash)
+                            .equals(itemHash)
                             .and((weapon) => weapon.inInv === selectedClass)
-                            .modify((weapon: { equipped: number; inInv: number; instanceIds: string[][] }) => {
-                                weapon.equipped = selectedClass;
-                                weapon.inInv = -1;
-                                weapon.instanceIds = [
-                                    weapon.instanceIds[0],
-                                    weapon.instanceIds[1].filter((iId: string) => iId !== slotInstanceIds[i].id),
-                                    [...weapon.instanceIds[2], slotInstanceIds[i].id],
-                                ];
-                            })
+                            .modify((weapon: { equipped: number; inInv: number; instanceIds: string[][] }) =>
+                                flagItemEquipped(weapon, itemInstanceId)
+                            )
                     );
                 }
             }
@@ -606,15 +602,9 @@ const Randomizer = () => {
                             .where("hash")
                             .equals(item.hash)
                             .and((armour) => armour.inInv === selectedClass)
-                            .modify((armour: { equipped: number; inInv: number; instanceIds: string[][] }) => {
-                                armour.equipped = selectedClass;
-                                armour.inInv = -1;
-                                armour.instanceIds = [
-                                    armour.instanceIds[0],
-                                    armour.instanceIds[1].filter((iId: string) => iId !== slotInstanceIds[i].id),
-                                    [...armour.instanceIds[2], slotInstanceIds[i].id],
-                                ];
-                            })
+                            .modify((armour: { equipped: number; inInv: number; instanceIds: string[][] }) =>
+                                flagItemEquipped(armour, slotInstanceIds[i].id)
+                            )
                     );
                 }
             }
