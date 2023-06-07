@@ -14,12 +14,12 @@ const Lock = ({ onLock, defaultLocked, disable }: LockProps) => {
                 className="peer sr-only"
                 onChange={(e) => onLock(e.target.checked)}
             />
-            <div className="group flex h-6 w-6 items-center justify-center rounded-full bg-slate-600 bg-opacity-80 shadow transition-all duration-150 peer-checked:bg-black peer-checked:bg-opacity-50 peer-disabled:opacity-50">
+            <div className="group flex h-6 w-6 items-center justify-center rounded-full bg-slate-600 bg-opacity-80 shadow transition-all duration-150 peer-checked:bg-black peer-checked:bg-opacity-50 peer-disabled:opacity-30">
                 <svg
                     viewBox="0 0 24 24"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="absolute w-[0.9em] fill-black stroke-black opacity-[65%] transition-all duration-150  peer-checked:group-[]:opacity-0"
+                    className="absolute w-[0.9em] fill-black stroke-black opacity-[65%] transition-all duration-150 peer-checked:group-[]:opacity-0"
                 >
                     <g>
                         <path

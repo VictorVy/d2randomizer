@@ -6,7 +6,7 @@ import SubclassRadio from "./SubclassRadio";
 import Dexie, { IndexableType, Table } from "dexie";
 import ArmourSettings from "./ArmourSettings";
 import WeaponSettings from "./WeaponSettings";
-import { Class, Element } from "../utils/Enums";
+import { Class, Element, Location } from "../utils/Enums";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
@@ -44,6 +44,45 @@ function parseSubclassBuildName(buildName: string) {
     }
 }
 
+function getExoticSlots(items: any[]) {
+    const exoticSlots: number[] = [-1, -1];
+
+    for (let i = 0; i < 7; i++) {
+        if (items[i] && items[i].tier === "Exotic") {
+            exoticSlots[i < 3 ? 0 : 1] = i;
+            if (i > 2) {
+                break;
+            }
+        }
+    }
+
+    return exoticSlots;
+}
+
+function getRandomInstanceId(item: any, locationsAllowed: boolean[]) {
+    if (item) {
+        const allIds: string[] = [
+            ...(locationsAllowed[Location.VAULT] ? item.instanceIds[Location.VAULT] : []),
+            ...(locationsAllowed[Location.INVENTORY] ? item.instanceIds[Location.INVENTORY] : []),
+            ...(locationsAllowed[Location.EQUIPPED] ? item.instanceIds[Location.EQUIPPED] : []),
+        ];
+
+        const randomId: string = allIds[Math.floor(Math.random() * allIds.length)];
+
+        const location: number = item.instanceIds[Location.VAULT].includes(randomId)
+            ? Location.VAULT
+            : item.instanceIds[Location.INVENTORY].includes(randomId)
+            ? Location.INVENTORY
+            : item.instanceIds[Location.EQUIPPED].includes(randomId)
+            ? Location.EQUIPPED
+            : -1;
+
+        return { location: location, id: randomId };
+    } else {
+        return undefined;
+    }
+}
+
 const Randomizer = () => {
     const logged: boolean = localStorage.getItem("access_token") ? true : false;
     let accessToken: string = logged ? localStorage.getItem("access_token")! : "";
@@ -71,12 +110,10 @@ const Randomizer = () => {
     let [classLocked, setClassLocked] = useState(true);
     let [subclassLocked, setSubclassLocked] = useState(false);
 
-    const SLOTS_LOCKED: boolean[] = [false, false, false, false, false, false, false];
-
     let [lockedWeaponExoticSlot, setLockedWeaponExoticSlot] = useState(-1);
     let [lockedArmourExoticSlot, setLockedArmourExoticSlot] = useState(-1);
 
-    const [slotsLocked, setSlotsLocked] = useState(SLOTS_LOCKED);
+    const [slotsLocked, setSlotsLocked] = useState([false, false, false, false, false, false, false]);
 
     function setSlotLocked(slot: number, locked: boolean) {
         let tmpSlotsLocked = [...slotsLocked];
@@ -84,7 +121,6 @@ const Randomizer = () => {
         setSlotsLocked(tmpSlotsLocked);
     }
 
-    // lock class when armour is locked
     let [disableClassLock, setDisableClassLock] = useState(false);
 
     useEffect(() => {
@@ -96,86 +132,28 @@ const Randomizer = () => {
 
         setDisableClassLock(armourLocked);
 
-        const exoticSlots: number[] = getExoticSlots();
+        const exoticSlots: number[] = getExoticSlots(slotItems);
 
-        if (exoticSlots[0] !== -1) {
-            setLockedWeaponExoticSlot(slotsLocked[exoticSlots[0]] ? exoticSlots[0] : -1);
-        }
-        if (exoticSlots[1] !== -1) {
-            setLockedArmourExoticSlot(slotsLocked[exoticSlots[1]] ? exoticSlots[1] : -1);
-        }
+        setLockedWeaponExoticSlot(exoticSlots[0] !== -1 && slotsLocked[exoticSlots[0]] ? exoticSlots[0] : -1);
+        setLockedArmourExoticSlot(exoticSlots[1] !== -1 && slotsLocked[exoticSlots[1]] ? exoticSlots[1] : -1);
     }, [slotsLocked]);
-
-    function getExoticSlots() {
-        const exoticSlots: number[] = [-1, -1];
-
-        for (let i = 0; i < 7; i++) {
-            if (slotItems[i] && slotItems[i].tier === "Exotic") {
-                exoticSlots[i < 3 ? 0 : 1] = i;
-                if (i > 2) {
-                    break;
-                }
-            }
-        }
-
-        return exoticSlots;
-    }
 
     // randomize instance ids
     useEffect(() => {
-        const weaponsInVault: boolean = localStorage.getItem("weapon_in_vault") === "true" ? true : false;
-        const weaponsInInv: boolean = localStorage.getItem("weapon_in_inventory") === "true" ? true : false;
-        const weaponsEquipped: boolean = localStorage.getItem("weapon_equipped") === "true" ? true : false;
+        if (logged) {
+            const weaponsInVault: boolean = localStorage.getItem("weapon_in_vault") === "true" ? true : false;
+            const weaponsInInv: boolean = localStorage.getItem("weapon_in_inventory") === "true" ? true : false;
+            const weaponsEquipped: boolean = localStorage.getItem("weapon_equipped") === "true" ? true : false;
 
-        const armourInVault: boolean = localStorage.getItem("armour_in_vault") === "true" ? true : false;
-        const armourInInv: boolean = localStorage.getItem("armour_in_inventory") === "true" ? true : false;
-        const armourEquipped: boolean = localStorage.getItem("armour_equipped") === "true" ? true : false;
+            const armourInVault: boolean = localStorage.getItem("armour_in_vault") === "true" ? true : false;
+            const armourInInv: boolean = localStorage.getItem("armour_in_inventory") === "true" ? true : false;
+            const armourEquipped: boolean = localStorage.getItem("armour_equipped") === "true" ? true : false;
 
-        for (let i = 0; i < 3; i++) {
-            if (slotItems[i]) {
-                const allIds: string[] = [
-                    ...(weaponsInVault ? slotItems[i].instanceIds[0] : []),
-                    ...(weaponsInInv ? slotItems[i].instanceIds[1] : []),
-                    ...(weaponsEquipped ? slotItems[i].instanceIds[2] : []),
-                ];
-
-                const randomId: string = allIds[Math.floor(Math.random() * allIds.length)];
-
-                const location: number = slotItems[i].instanceIds[0].includes(randomId)
-                    ? 0
-                    : slotItems[i].instanceIds[1].includes(randomId)
-                    ? 1
-                    : slotItems[i].instanceIds[2].includes(randomId)
-                    ? 2
-                    : -1;
-
-                slotInstanceIds[i] = { location: location, id: randomId };
-            } else {
-                slotInstanceIds[i] = undefined;
+            for (let i = 0; i < 3; i++) {
+                slotInstanceIds[i] = getRandomInstanceId(slotItems[i], [weaponsInVault, weaponsInInv, weaponsEquipped]);
             }
-        }
-
-        for (let i = 3; i < 7; i++) {
-            if (slotItems[i]) {
-                const allIds: string[] = [
-                    ...(armourInVault ? slotItems[i].instanceIds[0] : []),
-                    ...(armourInInv ? slotItems[i].instanceIds[1] : []),
-                    ...(armourEquipped ? slotItems[i].instanceIds[2] : []),
-                ];
-
-                const randomId: string = allIds[Math.floor(Math.random() * allIds.length)];
-
-                const location: number = slotItems[i].instanceIds[0].includes(randomId)
-                    ? 0
-                    : slotItems[i].instanceIds[1].includes(randomId)
-                    ? 1
-                    : slotItems[i].instanceIds[2].includes(randomId)
-                    ? 2
-                    : -1;
-
-                slotInstanceIds[i] = { location: location, id: randomId };
-            } else {
-                slotInstanceIds[i] = undefined;
+            for (let i = 3; i < 7; i++) {
+                slotInstanceIds[i] = getRandomInstanceId(slotItems[i], [armourInVault, armourInInv, armourEquipped]);
             }
         }
     }, [slotItems]);
@@ -223,22 +201,7 @@ const Randomizer = () => {
     }
 
     async function randomize() {
-        let randClass: number;
-
-        if (logged) {
-            const userClasses = [];
-
-            for (let i = 0; i < 3; i++) {
-                if (localStorage.getItem(`character_${i}`)) {
-                    userClasses.push(i);
-                }
-            }
-
-            randClass = userClasses[Math.floor(Math.random() * userClasses.length)];
-        } else {
-            randClass = Math.floor(Math.random() * 3);
-        }
-
+        const randClass: number = randomizeClass();
         let randSubclass: number;
 
         if (logged) {
@@ -261,6 +224,22 @@ const Randomizer = () => {
         await randomizeItems(classLocked || disableClassLock ? selectedClass : randClass);
 
         setSlotItems(tmpSlotItems);
+    }
+
+    function randomizeClass() {
+        if (logged) {
+            const userClasses = [];
+
+            for (let i = 0; i < 3; i++) {
+                if (localStorage.getItem(`character_${i}`)) {
+                    userClasses.push(i);
+                }
+            }
+
+            return userClasses[Math.floor(Math.random() * userClasses.length)];
+        } else {
+            return Math.floor(Math.random() * 3);
+        }
     }
 
     async function randomizeItems(selClass: number) {
@@ -418,7 +397,7 @@ const Randomizer = () => {
     }
 
     async function equipNonExotics(charId: string) {
-        const exoticSlots: number[] = getExoticSlots();
+        const exoticSlots: number[] = getExoticSlots(slotInstanceIds);
 
         let ids: string[] = slotInstanceIds
             .filter((instance, index) => instance !== undefined && !exoticSlots.includes(index))
@@ -441,8 +420,6 @@ const Randomizer = () => {
         })
             .then((response) => response.json())
             .then((result) => {
-                console.log(result);
-
                 if (result.ErrorCode === 1) {
                     equipExotics(charId);
                 } else if (result.ErrorCode === 36) {
@@ -452,7 +429,7 @@ const Randomizer = () => {
     }
 
     async function equipExotics(charId: string) {
-        const exoticSlots: number[] = getExoticSlots();
+        const exoticSlots: number[] = getExoticSlots(slotInstanceIds);
 
         const ids = [];
 
@@ -481,8 +458,6 @@ const Randomizer = () => {
             })
                 .then((response) => response.json())
                 .then((result) => {
-                    console.log(result);
-
                     if (result.ErrorCode === 1) {
                         setTimeout(resetEquipped, 200);
                     } else if (result.ErrorCode === 36) {
@@ -511,8 +486,6 @@ const Randomizer = () => {
         })
             .then((response) => response.json())
             .then((result) => {
-                console.log(result);
-
                 if (result.ErrorCode === 1) {
                     setTimeout(() => updateIDBVaultToInv(item, instanceId), 200);
                 } else if (result.ErrorCode === 36) {

@@ -7,25 +7,25 @@ interface ClassRadioProps {
     disableAll?: boolean;
 }
 
-const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => {
-    const logged = localStorage.getItem("access_token") ? true : false;
+const logged = localStorage.getItem("access_token") ? true : false;
 
-    let disableTitan = false;
-    let disableHunter = false;
-    let disableWarlock = false;
+let disableTitan = false;
+let disableHunter = false;
+let disableWarlock = false;
 
-    if (logged) {
-        if (!localStorage.getItem("character_" + Class.TITAN)) {
-            disableTitan = true;
-        }
-        if (!localStorage.getItem("character_" + Class.HUNTER)) {
-            disableHunter = true;
-        }
-        if (!localStorage.getItem("character_" + Class.WARLOCK)) {
-            disableWarlock = true;
-        }
+if (logged) {
+    if (!localStorage.getItem("character_" + Class.TITAN)) {
+        disableTitan = true;
     }
+    if (!localStorage.getItem("character_" + Class.HUNTER)) {
+        disableHunter = true;
+    }
+    if (!localStorage.getItem("character_" + Class.WARLOCK)) {
+        disableWarlock = true;
+    }
+}
 
+const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => {
     return (
         <div className="flex max-w-min items-center rounded-md bg-black bg-opacity-20 p-2 shadow">
             <label title="Titan" className="px-2">
@@ -41,7 +41,7 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                     className={
                         "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-95 peer-active:opacity-100" +
                         " peer-disabled:" +
-                        (selected === Class.TITAN ? "opacity-90" : "opacity-20")
+                        (selected === Class.TITAN ? "opacity-90" : "opacity-10")
                     }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
@@ -65,7 +65,7 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                     className={
                         "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-95 peer-active:opacity-100" +
                         " peer-disabled:" +
-                        (selected === Class.HUNTER ? "opacity-90" : "opacity-20")
+                        (selected === Class.HUNTER ? "opacity-90" : "opacity-10")
                     }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
@@ -88,7 +88,7 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                     className={
                         "cursor-pointer fill-white opacity-50 duration-75 peer-checked:opacity-90 peer-hover:opacity-95 peer-active:opacity-100" +
                         " peer-disabled:" +
-                        (selected === Class.WARLOCK ? "opacity-90" : "opacity-20")
+                        (selected === Class.WARLOCK ? "opacity-90" : "opacity-10")
                     }
                     viewBox="0 0 32 32"
                     xmlns="http://www.w3.org/2000/svg"
