@@ -4,6 +4,7 @@ import Randomizer from "../components/Randomizer";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect } from "react";
 import { Class, Location } from "../utils/Enums";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
@@ -194,8 +195,8 @@ function fetchPowerCapHashes(manifest: any) {
     });
 }
 
-function parseManifest(manifest: any, capHashes: number[]) {
-    fetch("https://www.bungie.net" + manifest.jsonWorldContentPaths.en)
+async function parseManifest(manifest: any, capHashes: number[]) {
+    return fetch("https://www.bungie.net" + manifest.jsonWorldContentPaths.en)
         .then((response) => response.json())
         .then((data) => {
             const nonSunset = (hash: number) => {
@@ -208,9 +209,11 @@ function parseManifest(manifest: any, capHashes: number[]) {
                 return false;
             };
 
-            let keys = Object.keys(data.DestinyInventoryItemDefinition);
+            let keys;
 
             db.transaction("rw", allTables, () => {
+                keys = Object.keys(data.DestinyInventoryItemDefinition);
+
                 for (let i = 0; i < keys.length; i++) {
                     addItemToDB(data.DestinyInventoryItemDefinition[keys[i]], nonSunset);
                 }
@@ -247,6 +250,8 @@ function parseManifest(manifest: any, capHashes: number[]) {
                     localStorage.setItem("subclass_hash", data.DestinyInventoryBucketDefinition[keys[i]].hash);
                 }
             }
+
+            console.log("Done");
         });
 }
 
@@ -506,7 +511,9 @@ const Home = () => {
 
     if (fetchWeapons?.length === 0) {
         fetchManifest().then(async (manifest) => {
-            parseManifest(manifest, await fetchPowerCapHashes(manifest));
+            parseManifest(manifest, await fetchPowerCapHashes(manifest)).then(() => {
+                console.log("after done");
+            });
         });
     }
 
@@ -532,7 +539,9 @@ const Home = () => {
         };
     }, []);
 
-    return (
+    return false ? (
+        <LoadingOverlay />
+    ) : (
         <div className="h-screen w-screen bg-gray-700">
             <NavBar onLogout={onLogout} />
             <Randomizer />
