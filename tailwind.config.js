@@ -15,6 +15,8 @@ export default {
     "./src/components/ArmourSettings.tsx",
     "./src/components/WeaponSettings.tsx",
     "./src/components/Toggle.tsx",
+    "./src/components/Spinner.tsx",
+    "./src/components/LoadingOverlay.tsx",
   ],
   theme: {
     extend: {},
