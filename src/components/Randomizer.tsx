@@ -240,25 +240,6 @@ const Randomizer = () => {
         setLockedArmourExoticSlot(exoticSlots[1] !== -1 && slotsLocked[exoticSlots[1]] ? exoticSlots[1] : -1);
     }, [slotsLocked]);
 
-    useEffect(() => {
-        if (logged) {
-            const weaponInVault: boolean = localStorage.getItem("weapon_in_vault") === "true" ? true : false;
-            const weaponInInv: boolean = localStorage.getItem("weapon_in_inventory") === "true" ? true : false;
-            const weaponEquipped: boolean = localStorage.getItem("weapon_equipped") === "true" ? true : false;
-
-            const armourInVault: boolean = localStorage.getItem("armour_in_vault") === "true" ? true : false;
-            const armourInInv: boolean = localStorage.getItem("armour_in_inventory") === "true" ? true : false;
-            const armourEquipped: boolean = localStorage.getItem("armour_equipped") === "true" ? true : false;
-
-            for (let i = 0; i < 3; i++) {
-                slotInstanceIds[i] = getRandomInstanceId(slotItems[i], [weaponInVault, weaponInInv, weaponEquipped]);
-            }
-            for (let i = 3; i < 7; i++) {
-                slotInstanceIds[i] = getRandomInstanceId(slotItems[i], [armourInVault, armourInInv, armourEquipped]);
-            }
-        }
-    }, [slotItems]);
-
     async function randomize() {
         const randomClass: number = randomizeClass(logged);
 
@@ -268,6 +249,10 @@ const Randomizer = () => {
         await randomizeItems(classLocked || disableClassLock ? selectedClass : randomClass);
 
         setSlotItems(tmpSlotItems);
+
+        if (logged) {
+            randomizeInstanceIds(tmpSlotItems);
+        }
     }
 
     async function randomizeItems(selClass: number) {
@@ -365,6 +350,23 @@ const Randomizer = () => {
         }
 
         await Promise.all(tasks);
+    }
+
+    function randomizeInstanceIds(items: any[]) {
+        const weaponInVault: boolean = localStorage.getItem("weapon_in_vault") === "true" ? true : false;
+        const weaponInInv: boolean = localStorage.getItem("weapon_in_inventory") === "true" ? true : false;
+        const weaponEquipped: boolean = localStorage.getItem("weapon_equipped") === "true" ? true : false;
+
+        const armourInVault: boolean = localStorage.getItem("armour_in_vault") === "true" ? true : false;
+        const armourInInv: boolean = localStorage.getItem("armour_in_inventory") === "true" ? true : false;
+        const armourEquipped: boolean = localStorage.getItem("armour_equipped") === "true" ? true : false;
+
+        for (let i = 0; i < 3; i++) {
+            slotInstanceIds[i] = getRandomInstanceId(items[i], [weaponInVault, weaponInInv, weaponEquipped]);
+        }
+        for (let i = 3; i < 7; i++) {
+            slotInstanceIds[i] = getRandomInstanceId(items[i], [armourInVault, armourInInv, armourEquipped]);
+        }
     }
 
     function importItems() {
