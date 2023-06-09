@@ -15,7 +15,7 @@ db.version(1).stores({
     titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
     hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
     warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
-    subclasses: "hash, name, buildName, class_type, icon, inInv, equipped, instanceId",
+    subclasses: "hash, name, buildName, class_type, element, icon, inInv, equipped, instanceId",
 });
 
 const subclasses = db.table("subclasses");

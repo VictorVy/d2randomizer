@@ -529,7 +529,7 @@ function flagEquippedItem(table: Table<any, IndexableType>, item: any, classType
 }
 
 const Home = () => {
-    let [loading, setLoading] = useState(false);
+    let [loading, setLoading] = useState(true);
 
     useEffect(() => {
         (async () => {
@@ -538,26 +538,27 @@ const Home = () => {
             const count = await weapons.count();
 
             if (count === 0) {
-                setLoading(true);
                 fetchManifest().then(async (manifest) => {
                     if (!canceled) {
                         parseManifest(manifest, await fetchPowerCapHashes(manifest)).then(() => setLoading(false));
                     }
                 });
-            }
-
-            if (localStorage.getItem("access_token")) {
+            } else if (localStorage.getItem("access_token")) {
                 clearDB().then(() => {
                     if (!canceled) {
                         const bungieMembershipId = localStorage.getItem("bungie_membership_id")!;
-
+                        setLoading(true);
                         fetchDisplayName(bungieMembershipId).then((fullDisplayName) =>
                             fetchD2MembershipId(fullDisplayName).then(({ d2MembershipId, d2MembershipType }) =>
-                                fetchProfile(d2MembershipId, d2MembershipType).then((profile) => parseProfile(profile))
+                                fetchProfile(d2MembershipId, d2MembershipType).then((profile) =>
+                                    parseProfile(profile).then(() => setLoading(false))
+                                )
                             )
                         );
                     }
                 });
+            } else {
+                setLoading(false);
             }
 
             return () => {
@@ -567,10 +568,9 @@ const Home = () => {
         })();
     }, []);
 
-    return loading ? (
-        <LoadingOverlay />
-    ) : (
+    return (
         <div className="h-screen w-screen bg-gray-700">
+            <LoadingOverlay loading={loading} />
             <NavBar onLogout={onLogout} />
             <Randomizer />
         </div>
