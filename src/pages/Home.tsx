@@ -3,7 +3,7 @@ import NavBar from "../components/NavBar";
 import Randomizer from "../components/Randomizer";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect } from "react";
-import { Class, Location } from "../utils/Enums";
+import { Class, Location, Element } from "../utils/Enums";
 import LoadingOverlay from "../components/LoadingOverlay";
 
 const db = new Dexie("D2Randomizer");
@@ -12,7 +12,7 @@ db.version(1).stores({
     titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
     hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
     warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
-    subclasses: "hash, name, buildName, class_type, icon, inInv, equipped",
+    subclasses: "hash, name, buildName, class_type, element, icon, inInv, equipped, instanceId",
 });
 
 const weapons = db.table("weapons");
@@ -23,10 +23,27 @@ const subclasses = db.table("subclasses");
 
 const allTables = [weapons, titan_armour, hunter_armour, warlock_armour, subclasses];
 
-const apiKey: string = import.meta.env.VITE_API_KEY;
-
 function getArmourTable(c: number) {
     return c === Class.TITAN ? titan_armour : c === Class.HUNTER ? hunter_armour : warlock_armour;
+}
+
+const apiKey: string = import.meta.env.VITE_API_KEY;
+
+function parseSubclassBuildName(buildName: string) {
+    const element: string = buildName.split("_")[0];
+
+    switch (element) {
+        case "thermal":
+            return Element.SOLAR;
+        case "arc":
+            return Element.ARC;
+        case "void":
+            return Element.VOID;
+        case "stasis":
+            return Element.STASIS;
+        default:
+            return Element.STRAND;
+    }
 }
 
 function addWeapon(
@@ -98,18 +115,22 @@ function addSubclass(
     name: string,
     buildName: string,
     class_type: number,
+    element: number,
     icon: string,
     inInv: number,
-    equipped: number
+    equipped: number,
+    instanceId: string
 ) {
     subclasses.put({
         hash: hash,
         name: name,
         buildName: buildName,
         class_type: class_type,
+        element: element,
         icon: icon,
         inInv: inInv,
         equipped: equipped,
+        instanceId: instanceId,
     });
 }
 
@@ -250,8 +271,6 @@ async function parseManifest(manifest: any, capHashes: number[]) {
                     localStorage.setItem("subclass_hash", data.DestinyInventoryBucketDefinition[keys[i]].hash);
                 }
             }
-
-            console.log("Done");
         });
 }
 
@@ -296,9 +315,11 @@ function addItemToDB(item: any, nonSunset: (hash: number) => boolean) {
             item.displayProperties.name,
             item.talentGrid.buildName,
             item.classType,
+            parseSubclassBuildName(item.talentGrid.buildName),
             "https://www.bungie.net" + item.displayProperties.icon,
             -1,
-            -1
+            -1,
+            ""
         );
     }
 }
@@ -454,6 +475,7 @@ async function parseProfile(profile: any) {
             } else if (item.bucketHash === subclassHash) {
                 subclasses.update(item.itemHash, {
                     inInv: classType,
+                    instanceId: item.itemInstanceId,
                 });
             }
         }
@@ -474,6 +496,7 @@ async function parseProfile(profile: any) {
             } else if (item.bucketHash === subclassHash) {
                 subclasses.update(item.itemHash, {
                     equipped: classType,
+                    instanceId: item.itemInstanceId,
                 });
             }
         }
@@ -508,16 +531,22 @@ function flagEquippedItem(table: Table<any, IndexableType>, item: any, classType
 
 const Home = () => {
     let fetchWeapons = useLiveQuery(() => weapons.toArray(), []);
+    // let [loading, setLoading] = useState(false);
 
     if (fetchWeapons?.length === 0) {
+        // console.log("fetching");
+
+        // setLoading(true);
         fetchManifest().then(async (manifest) => {
             parseManifest(manifest, await fetchPowerCapHashes(manifest)).then(() => {
-                console.log("after done");
+                // setLoading(false);
             });
         });
     }
 
     useEffect(() => {
+        // console.log(fetchWeapons?.length);
+
         let canceled = false;
 
         if (localStorage.getItem("access_token")) {

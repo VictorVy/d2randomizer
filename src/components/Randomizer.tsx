@@ -14,7 +14,7 @@ db.version(1).stores({
     titan_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
     hunter_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
     warlock_armour: "hash, name, type, class_type, tier, slot, icon, owned, inVault, inInv, equipped, instanceIds",
-    subclasses: "hash, name, buildName, class_type, icon, inInv, equipped",
+    subclasses: "hash, name, buildName, class_type, element, icon, inInv, equipped, instanceId",
 });
 
 const weapons = db.table("weapons");
@@ -25,6 +25,14 @@ const subclasses = db.table("subclasses");
 
 function getArmourTable(c: number) {
     return c === Class.TITAN ? titan_armour : c === Class.HUNTER ? hunter_armour : warlock_armour;
+}
+
+function getSubclassInstanceId(selClass: number, selSubclass: number) {
+    return subclasses
+        .where("class_type")
+        .equals(selClass)
+        .and((subclass) => subclass.element === selSubclass)
+        .first((subclass) => subclass.instanceId);
 }
 
 function chooseItem(
@@ -420,8 +428,10 @@ const Randomizer = () => {
         });
     }
 
-    function equipNonExotics(charId: string) {
+    async function equipNonExotics(charId: string) {
         const exoticSlots: number[] = getExoticSlots(slotInstanceIds);
+
+        const subclassInstanceId: string = await getSubclassInstanceId(selectedClass, selectedSubclass);
 
         let ids: string[] = slotInstanceIds
             .filter((instance, index) => instance !== undefined && !exoticSlots.includes(index))
@@ -435,7 +445,7 @@ const Randomizer = () => {
                 Authorization: "Bearer " + accessToken,
             },
             body: JSON.stringify({
-                itemIds: ids,
+                itemIds: [...ids, subclassInstanceId],
                 characterId: charId,
                 membershipType: parseInt(localStorage.getItem("d2_membership_type")!),
             }),
