@@ -27,13 +27,13 @@ const Login = () => {
                     localStorage.setItem("refresh_token", data.refresh_token);
                     localStorage.setItem("bungie_membership_id", data.membership_id);
 
-                    window.location.href = "/home";
+                    window.location.href = "/";
                 }
             });
     }
 
     if (localStorage.getItem("access_token")) {
-        window.location.href = "/home";
+        window.location.href = "/";
     }
 
     return (
