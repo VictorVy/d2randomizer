@@ -1,8 +1,7 @@
 import Dexie, { IndexableType, Table } from "dexie";
 import NavBar from "../components/NavBar";
 import Randomizer from "../components/Randomizer";
-import { useLiveQuery } from "dexie-react-hooks";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Class, Location, Element } from "../utils/Enums";
 import LoadingOverlay from "../components/LoadingOverlay";
 
@@ -530,45 +529,45 @@ function flagEquippedItem(table: Table<any, IndexableType>, item: any, classType
 }
 
 const Home = () => {
-    let fetchWeapons = useLiveQuery(() => weapons.toArray(), []);
-    // let [loading, setLoading] = useState(false);
-
-    if (fetchWeapons?.length === 0) {
-        // console.log("fetching");
-
-        // setLoading(true);
-        fetchManifest().then(async (manifest) => {
-            parseManifest(manifest, await fetchPowerCapHashes(manifest)).then(() => {
-                // setLoading(false);
-            });
-        });
-    }
+    let [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // console.log(fetchWeapons?.length);
+        (async () => {
+            let canceled = false;
 
-        let canceled = false;
+            const count = await weapons.count();
 
-        if (localStorage.getItem("access_token")) {
-            clearDB().then(() => {
-                if (!canceled) {
-                    const bungieMembershipId = localStorage.getItem("bungie_membership_id")!;
+            if (count === 0) {
+                setLoading(true);
+                fetchManifest().then(async (manifest) => {
+                    if (!canceled) {
+                        parseManifest(manifest, await fetchPowerCapHashes(manifest)).then(() => setLoading(false));
+                    }
+                });
+            }
 
-                    fetchDisplayName(bungieMembershipId).then((fullDisplayName) =>
-                        fetchD2MembershipId(fullDisplayName).then(({ d2MembershipId, d2MembershipType }) =>
-                            fetchProfile(d2MembershipId, d2MembershipType).then((profile) => parseProfile(profile))
-                        )
-                    );
-                }
-            });
-        }
+            if (localStorage.getItem("access_token")) {
+                clearDB().then(() => {
+                    if (!canceled) {
+                        const bungieMembershipId = localStorage.getItem("bungie_membership_id")!;
 
-        return () => {
-            canceled = true;
-        };
+                        fetchDisplayName(bungieMembershipId).then((fullDisplayName) =>
+                            fetchD2MembershipId(fullDisplayName).then(({ d2MembershipId, d2MembershipType }) =>
+                                fetchProfile(d2MembershipId, d2MembershipType).then((profile) => parseProfile(profile))
+                            )
+                        );
+                    }
+                });
+            }
+
+            return () => {
+                canceled = true;
+                setLoading(false);
+            };
+        })();
     }, []);
 
-    return false ? (
+    return loading ? (
         <LoadingOverlay />
     ) : (
         <div className="h-screen w-screen bg-gray-700">
