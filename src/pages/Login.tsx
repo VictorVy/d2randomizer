@@ -1,3 +1,5 @@
+import LoadingOverlay from "../components/LoadingOverlay";
+
 const Login = () => {
     if (window.location.href.includes("code=")) {
         const clientId = import.meta.env.VITE_CLIENT_ID;
@@ -34,7 +36,11 @@ const Login = () => {
         window.location.href = "/home";
     }
 
-    return <div className="grid h-screen w-screen place-items-center bg-black" />;
+    return (
+        <div className="h-screen w-screen bg-black">
+            <LoadingOverlay loading={true} />
+        </div>
+    );
 };
 
 export default Login;
