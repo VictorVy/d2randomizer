@@ -8,6 +8,10 @@ import ArmourSettings from "./ArmourSettings";
 import WeaponSettings from "./WeaponSettings";
 import { Class, Element, Location } from "../utils/Enums";
 
+interface RandomizerProps {
+    disabledClasses: boolean[];
+}
+
 const db = new Dexie("D2Randomizer");
 db.version(1).stores({
     weapons: "hash, name, type, class_type, tier, slot, ammoType, icon, owned, inVault, inInv, equipped, instanceIds",
@@ -190,7 +194,7 @@ async function randomizeSubclass(randomClass: number, logged: boolean) {
     }
 }
 
-const Randomizer = () => {
+const Randomizer = ({ disabledClasses }: RandomizerProps) => {
     const logged: boolean = localStorage.getItem("access_token") ? true : false;
     const accessToken: string = logged ? localStorage.getItem("access_token")! : "";
 
@@ -631,7 +635,12 @@ const Randomizer = () => {
                 <div className="absolute -left-9 top-1/2 -translate-y-1/2">
                     <Lock onLock={setClassLocked} defaultLocked={true} disable={disableClassLock} />
                 </div>
-                <ClassRadio selected={selectedClass} handleChange={setSelectedClass} disableAll={disableClassLock} />
+                <ClassRadio
+                    selected={selectedClass}
+                    handleChange={setSelectedClass}
+                    disableAll={disableClassLock}
+                    disableClasses={disabledClasses}
+                />
             </div>
             <div className="relative">
                 <div className="absolute -left-9 top-1/2 -translate-y-1/2">

@@ -22,6 +22,8 @@ const subclasses = db.table("subclasses");
 
 const allTables = [weapons, titan_armour, hunter_armour, warlock_armour, subclasses];
 
+let tmpDisabledClasses = [true, true, true];
+
 function getArmourTable(c: number) {
     return c === Class.TITAN ? titan_armour : c === Class.HUNTER ? hunter_armour : warlock_armour;
 }
@@ -159,7 +161,9 @@ function clearDB() {
     tasks.push(clearItems(titan_armour));
     tasks.push(clearItems(hunter_armour));
     tasks.push(clearItems(warlock_armour));
-    tasks.push(subclasses.filter((subclass) => subclass.inInv !== -1).modify({ inInv: -1, equipped: -1 }));
+    tasks.push(
+        subclasses.filter((subclass) => subclass.inInv !== -1).modify({ inInv: -1, equipped: -1, instanceId: "" })
+    );
 
     return Promise.all(tasks);
 }
@@ -459,6 +463,7 @@ async function parseProfile(profile: any) {
     for (let i = 0; i < characterIds.length; i++) {
         const classType = profile.characters.data[characterIds[i]].classType;
         localStorage.setItem("character_" + classType, characterIds[i]);
+        tmpDisabledClasses[classType] = false;
 
         const armourTable = getArmourTable(classType);
 
@@ -530,6 +535,7 @@ function flagEquippedItem(table: Table<any, IndexableType>, item: any, classType
 
 const Home = () => {
     let [loading, setLoading] = useState(true);
+    let [disableClasses, setDisableClasses] = useState([true, true, true]);
 
     useEffect(() => {
         (async () => {
@@ -551,7 +557,10 @@ const Home = () => {
                         fetchDisplayName(bungieMembershipId).then((fullDisplayName) =>
                             fetchD2MembershipId(fullDisplayName).then(({ d2MembershipId, d2MembershipType }) =>
                                 fetchProfile(d2MembershipId, d2MembershipType).then((profile) =>
-                                    parseProfile(profile).then(() => setLoading(false))
+                                    parseProfile(profile).then(() => {
+                                        setDisableClasses(tmpDisabledClasses);
+                                        setLoading(false);
+                                    })
                                 )
                             )
                         );
@@ -572,7 +581,7 @@ const Home = () => {
         <div className="h-screen w-screen bg-gray-700">
             <LoadingOverlay loading={loading} />
             <NavBar onLogout={onLogout} />
-            <Randomizer />
+            <Randomizer disabledClasses={disableClasses} />
         </div>
     );
 };

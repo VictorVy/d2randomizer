@@ -4,28 +4,12 @@ import { Class } from "../utils/Enums";
 interface ClassRadioProps {
     selected: number;
     handleChange: (n: number) => void;
+    disableClasses: boolean[];
     disableAll?: boolean;
 }
 
-const logged = localStorage.getItem("access_token") ? true : false;
-
-let disableTitan = false;
-let disableHunter = false;
-let disableWarlock = false;
-
-if (logged) {
-    if (!localStorage.getItem("character_" + Class.TITAN)) {
-        disableTitan = true;
-    }
-    if (!localStorage.getItem("character_" + Class.HUNTER)) {
-        disableHunter = true;
-    }
-    if (!localStorage.getItem("character_" + Class.WARLOCK)) {
-        disableWarlock = true;
-    }
-}
-
-const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => {
+const ClassRadio = ({ selected, handleChange, disableClasses, disableAll }: ClassRadioProps) => {
+    console.log(disableClasses);
     return (
         <div className="flex max-w-min items-center rounded-md bg-black bg-opacity-20 p-2 shadow">
             <label title="Titan" className="px-2">
@@ -34,7 +18,7 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                     type="radio"
                     name="class-radio"
                     onChange={() => handleChange(Class.TITAN)}
-                    disabled={disableAll || disableTitan}
+                    disabled={disableAll || disableClasses[Class.TITAN]}
                     checked={selected === Class.TITAN}
                 />
                 <svg
@@ -58,7 +42,7 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                     name="class-radio"
                     onChange={() => handleChange(Class.HUNTER)}
                     defaultChecked
-                    disabled={disableAll || disableHunter}
+                    disabled={disableAll || disableClasses[Class.HUNTER]}
                     checked={selected === Class.HUNTER}
                 />
                 <svg
@@ -81,7 +65,7 @@ const ClassRadio = ({ selected, handleChange, disableAll }: ClassRadioProps) => 
                     type="radio"
                     name="class-radio"
                     onChange={() => handleChange(Class.WARLOCK)}
-                    disabled={disableAll || disableWarlock}
+                    disabled={disableAll || disableClasses[Class.WARLOCK]}
                     checked={selected === Class.WARLOCK}
                 />
                 <svg
