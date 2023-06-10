@@ -386,14 +386,15 @@ function fetchProfile(d2MembershipId: string, d2MembershipType: string) {
         )
             .then((response) => response.json())
             .then((result) => {
-                console.log(result);
-
                 // if (result.ErrorCode === 401) {
                 //     window.location.href = `https://www.bungie.net/en/OAuth/Authorize?client_id=${
                 //         import.meta.env.VITE_CLIENT_ID
                 //     }&response_type=code`;
                 // }
                 resolve(result.Response);
+            })
+            .catch((error) => {
+                console.log(error);
             });
     });
 }
@@ -579,7 +580,6 @@ const Home = () => {
 
             return () => {
                 canceled = true;
-                localStorage.removeItem("access_token");
                 setLoading(false);
             };
         })();
