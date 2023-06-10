@@ -9,7 +9,6 @@ interface ClassRadioProps {
 }
 
 const ClassRadio = ({ selected, handleChange, disableClasses, disableAll }: ClassRadioProps) => {
-    console.log(disableClasses);
     return (
         <div className="flex max-w-min items-center rounded-md bg-black bg-opacity-20 p-2 shadow">
             <label title="Titan" className="px-2">
