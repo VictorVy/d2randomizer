@@ -570,6 +570,7 @@ const Home = () => {
 
             return () => {
                 canceled = true;
+                localStorage.removeItem("access_token");
                 setLoading(false);
             };
         })();
