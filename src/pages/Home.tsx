@@ -579,7 +579,9 @@ const Home = () => {
         <div className="h-screen w-screen bg-gray-700">
             <LoadingOverlay loading={loading} />
             <NavBar onLogout={onLogout} />
-            <Randomizer disabledClasses={disableClasses} />
+            <Randomizer
+                disabledClasses={localStorage.getItem("access_token") ? disableClasses : [false, false, false]}
+            />
         </div>
     );
 };
