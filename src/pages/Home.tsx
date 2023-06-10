@@ -385,9 +385,7 @@ function fetchProfile(d2MembershipId: string, d2MembershipType: string) {
             }
         )
             .then((response) => response.json())
-            .then(async (result) => {
-                resolve(result.Response);
-            });
+            .then((result) => resolve(result.Response));
     });
 }
 
